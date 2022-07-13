@@ -1,0 +1,9 @@
+{
+  "settings": {
+    "bearer_token": "-- YOUR BEARER TOKEN --",
+    "software_id": "-- SOFTWARE ID --",
+    "pos_id": "-- YOU DEFINE THIS -> UNIQUE POS ID --",
+    "base_url": "https://edge.nerfstars.com/terminal-api/v1/terminals/",
+    "terminal_id": "-- TERMINAL ID FROM CUSTOMER TERMINAL --"
+  }
+}
