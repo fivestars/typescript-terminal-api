@@ -24,7 +24,7 @@ export default function App(props: AppProps) {
   const inputSpan = tw`text-center flex flex-col flex-grow-0 w-full`
   const input = tw`p-2 rounded border border-solid border-gray-400`
   const wellHeader = tw`text-center font-bold mb-4`
-  const logEntry = tw`pb-2`
+  const logEntry = tw`pb-3 w-full whitespace-normal break-words`
   const horizontalFlow = tw`flex flex-row gap-4`
 
   const updateConfigValue = (evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) => setConfig({

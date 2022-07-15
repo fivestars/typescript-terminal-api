@@ -24,8 +24,19 @@ export default class TransactionRunner {
     this.delayInMillis = delayInMillis
   }
 
+  private async applyDelay() {
+    if (this.delayInMillis > 0) {
+      this.logger.log('Applying delay')
+      const delay = this.delayInMillis
+      await new Promise(resolve => setTimeout(resolve, delay))
+      this.logger.log('Resuming')
+    }
+  }
+
   public async run(transactionType: TransactionTypes) {
     const customerUidAndDiscount = await getCustomers(false, this.configuration, this.logger)
+
+    await this.applyDelay()
 
     const [posCheckoutId, posOrderId] = generateIds();
 
@@ -70,6 +81,8 @@ export default class TransactionRunner {
       resp.status == 200 &&
       returned_json.status == TransactionStatusTypes.TRANSACTION_STARTED
     ) {
+      await this.applyDelay()
+
       resp = await httpRequest(`checkouts/${posCheckoutId}`, "GET", null, this.configuration);
       returned_json = await resp.json();
 
@@ -106,6 +119,8 @@ export default class TransactionRunner {
   public async cancel() {
     const customerUidAndDiscount = await getCustomers(false, this.configuration, this.logger);
     const [posCheckoutId, posOrderId] = generateIds();
+
+    await this.applyDelay()
 
     const checkoutData = JSON.stringify({
       checkout: {

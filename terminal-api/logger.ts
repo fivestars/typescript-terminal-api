@@ -44,15 +44,22 @@ class ReactStateLogger implements ILogger {
 
     log(...data: any[]): void {
         // TODO: we can use a more complex structure to represent logs and provide a better representation
-        this.setter([...this.state, data.map(d => typeof d === "object" ? JSON.stringify(d) : d).join(' ')]);
+        const updatedState = [
+            ...this.state,
+            data.map(d => typeof d === "object" ? JSON.stringify(d) : d).join(' ')
+        ];
+        this.state = updatedState
+        this.setter(updatedState);
     }
 
     printOutcome(successful: boolean, reponse: Response): void {
         // TODO: we can use a more complex structure to represent logs and provide a better representation
-        this.setter([
+        const updatedState = [
             ...this.state,
             `Flow Outcome: ${successful ? 'Success' : 'Failed'} >> Response status: ${reponse.status} `
-        ]);
+        ];
+        this.state = updatedState
+        this.setter(updatedState);
     }
 }
 
