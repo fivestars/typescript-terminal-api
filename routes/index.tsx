@@ -2,11 +2,7 @@
 import { h } from "preact";
 import { tw } from "@twind";
 import App from "../islands/App.tsx";
-import { ConfigurationSchema } from '../types/config.ts'
-
-function readConfig(): ConfigurationSchema {
-  return JSON.parse(Deno.readTextFileSync('config/default.json'))?.settings
-}
+import readConfig from '../config/index.ts'
 
 export default function Home() {
   const defaultConfig = readConfig()

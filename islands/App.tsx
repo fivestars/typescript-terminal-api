@@ -4,6 +4,8 @@ import { useState } from "preact/hooks";
 import { IS_BROWSER } from "$fresh/runtime.ts";
 import { tw } from "@twind";
 import { ConfigurationSchema } from '../types/config.ts'
+import { TransactionTypes } from "../types/transaction.ts";
+import TransactionRunner from '../terminal-api/transaction.ts'
 
 interface AppProps {
   defaultConfig: ConfigurationSchema
@@ -29,7 +31,22 @@ export default function App(props: AppProps) {
 
   const runTransaction = (evt: h.JSX.TargetedMouseEvent<HTMLButtonElement>) => {
     const transactionName = evt.currentTarget.name
+    const transactionRunner = new TransactionRunner(config, undefined, delay)
+
     console.log('Running transaction:', transactionName)
+    console.log('Enum keys:', Object.keys(TransactionTypes))
+
+    if (transactionName in TransactionTypes) {
+      transactionRunner.run(
+        Object.values(TransactionTypes)[Object.keys(TransactionTypes).indexOf(transactionName)]
+      )
+    } else if (transactionName === 'ping') {
+      transactionRunner.ping()
+    } else if (transactionName === 'cancel') {
+      transactionRunner.cancel()
+    } else {
+      console.error("Unknown transaction: ", transactionName)
+    }
   }
 
   return (

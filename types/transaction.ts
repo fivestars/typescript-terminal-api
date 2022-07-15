@@ -9,7 +9,7 @@ export enum CustomerTerminalStateTypes {
 export enum TransactionTypes {
   cash = "CASH",
   credit = "CREDIT",
-  other = "OTHER",
+  other = "OTHER"
 }
 
 export enum TransactionCancelStateTypes {
@@ -33,4 +33,8 @@ export enum TransactionStatusTypes {
   CANCELED_BY_POS = "CANCELED_BY_POS",
   CANCELED_BY_CUSTOMER = "CANCELED_BY_CUSTOMER",
   TRANSACTION_CANCELED = "TRANSACTION_CANCELED",
+}
+
+export interface PingResponse {
+  connected: boolean
 }

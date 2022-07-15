@@ -8,6 +8,10 @@ Deno: [https://deno.land/](https://deno.land/)
 
 For Visual Studio Code install the Deno extension: [https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno)
 
+## Configuring credentials
+
+First of all you should edit the `config/default.json` file and update it with your credentials. These will be used by the scripts and will be used to fill in the default values in the UI.
+
 ## Running a simple UI
 
 Start the UI server using the command: `deno task start`

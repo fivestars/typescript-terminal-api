@@ -1,35 +1,14 @@
-import coffee from "https://deno.land/x/coffee@1.0.0/mod.ts";
-import {
-  bold,
-  gray,
-  green,
-  red,
-} from "https://deno.land/std@0.123.0/fmt/colors.ts";
-
 import {
   CustomerTerminalStateTypes, TransactionCancelStateTypes, CustomerUidAndDiscount
 } from '../types/transaction.ts'
+import { ConfigurationSchema } from '../types/config.ts'
+import { ILogger } from "./logger.ts";
 
-const BEARER_TOKEN: string = coffee.get("settings.bearer_token").string();
-const POS_ID: string = coffee.get("settings.pos_id").string();
-const URL: string = coffee.get("settings.base_url").string() +
-  coffee.get("settings.terminal_id").string() + "/";
+// const BEARER_TOKEN: string = coffee.get("settings.bearer_token").string();
+// const POS_ID: string = coffee.get("settings.pos_id").string();
+// const URL: string = coffee.get("settings.base_url").string() +
+//   coffee.get("settings.terminal_id").string() + "/";
 
-export const log = console.log;
-
-export function printOutcome(
-  successful = false,
-  reponse: Response,
-) {
-  log(gray("--------------------------------------"));
-  log(
-    successful
-      ? bold(green("Flow Outcome: Success"))
-      : bold(red("Flow Outcome: Failed")),
-  );
-  log(`Status Code: ${reponse.status}`);
-  log(gray("--------------------------------------"));
-}
 
 export function generateIds(): [string, string] {
   return [globalThis.crypto.randomUUID(), globalThis.crypto.randomUUID()];
@@ -39,19 +18,20 @@ export async function httpRequest(
   endpoint: string,
   method: string,
   body: string | null,
-  timeout = 120000,
+  config: ConfigurationSchema,
+  timeout = 120000
 ): Promise<Response> {
   let response: Response;
 
   try {
     const c = new AbortController();
     const id = setTimeout(() => c.abort(), timeout);
-    response = await fetch(URL + endpoint, {
+    response = await fetch(`${config.base_url}${config.terminal_id}/${endpoint}`, {
       signal: c.signal,
       method: method,
       headers: {
-        "Authorization": `Bearer ${BEARER_TOKEN}`,
-        "pos-id": `${POS_ID}`,
+        "Authorization": `Bearer ${config.bearer_token}`,
+        "pos-id": `${config.pos_id}`,
         "Content-Type": "application/json",
         "Accept": "application/json",
       },
@@ -72,6 +52,8 @@ export async function httpRequest(
 
 export async function getCustomers(
   thenCancel = false,
+  config: ConfigurationSchema,
+  logger: ILogger
 ): Promise<CustomerUidAndDiscount> {
   let discount = "";
 
@@ -79,40 +61,40 @@ export async function getCustomers(
   // these until the customer object is no longer null
   // Possible status values that will be returned:
   // IDLE | CHECKING_IN | SELECTING_DISCOUNT | AWAITING_PAYMENT | AWAITING_CHECKOUT
-  let resp = await httpRequest("customers", "GET", null);
+  let resp = await httpRequest("customers", "GET", null, config);
   let returned_json = await resp.json();
 
   if (resp.status == 200) {
     while (returned_json.customer == null) {
       const DEVICE_STATE = returned_json.device.device_state_title;
-      log(`Customer Terminal State: ${DEVICE_STATE}`);
+      logger.log(`Customer Terminal State: ${DEVICE_STATE}`);
 
       if (
         DEVICE_STATE == CustomerTerminalStateTypes.CHECKING_IN && thenCancel
       ) {
         // Cancel the transaction immediately
-        resp = await httpRequest("checkouts/cancel", "POST", null);
+        resp = await httpRequest("checkouts/cancel", "POST", null, config);
 
         if (
           resp.status == 200 &&
           TransactionCancelStateTypes.TRANSACTION_CANCELLED
         ) {
-          printOutcome(true, resp);
+          logger.printOutcome(true, resp);
         } else {
-          printOutcome(false, resp);
+          logger.printOutcome(false, resp);
         }
         return Promise.resolve({ discount: discount, uid: "" });
       }
 
-      resp = await httpRequest("customers", "GET", null);
+      resp = await httpRequest("customers", "GET", null, config);
       returned_json = await resp.json();
     }
   } else {
-    printOutcome(false, resp);
+    logger.printOutcome(false, resp);
     return Promise.resolve({ discount: discount, uid: "" });
   }
 
-  resp = await httpRequest("customers", "GET", null);
+  resp = await httpRequest("customers", "GET", null, config);
   returned_json = await resp.json();
 
   while (
@@ -121,7 +103,7 @@ export async function getCustomers(
       CustomerTerminalStateTypes.CHECKING_IN)
   ) {
     const DEVICE_STATE = returned_json.device.device_state_title;
-    log(`Customer Terminal State: ${DEVICE_STATE}`);
+    logger.log(`Customer Terminal State: ${DEVICE_STATE}`);
 
     if (
       DEVICE_STATE ==
@@ -131,11 +113,11 @@ export async function getCustomers(
       break;
     }
 
-    resp = await httpRequest("customers", "GET", null);
+    resp = await httpRequest("customers", "GET", null, config);
     returned_json = await resp.json();
   }
 
-  log(`Customer data: ${JSON.stringify(returned_json)}`);
+  logger.log(`Customer data: ${JSON.stringify(returned_json)}`);
 
   if (returned_json.customer.discounts.length > 0) {
     discount = returned_json.customer.discounts[0].uid;
