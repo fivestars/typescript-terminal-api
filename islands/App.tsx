@@ -2,11 +2,12 @@
 import { tw } from "@twind";
 import { Fragment, h } from "preact";
 import { useState } from "preact/hooks";
+import Button from '../components/Button.tsx';
+import { validateConfig } from '../config/index.ts';
 import { useLogger } from '../terminal-api/logger.ts';
 import TransactionRunner from '../terminal-api/transaction.ts';
 import { ConfigurationSchema } from '../types/config.ts';
 import { TransactionTypes } from "../types/transaction.ts";
-import Button from '../components/Button.tsx'
 
 interface AppProps {
   defaultConfig: ConfigurationSchema
@@ -24,6 +25,7 @@ export default function App(props: AppProps) {
   const input = tw`p-2 rounded border border-solid border-gray-400`
   const wellHeader = tw`text-center font-bold mb-4`
   const logEntry = tw`pb-2`
+  const horizontalFlow = tw`flex flex-row gap-4`
 
   const updateConfigValue = (evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) => setConfig({
     ...config,
@@ -60,8 +62,7 @@ export default function App(props: AppProps) {
   }
 
   const configurationInputsDisabled = Boolean(currentTransactionName)
-  // TODO: also validate config before allowing to start transactions
-  const transactionButtonsDisabled = Boolean(currentTransactionName)
+  const transactionButtonsDisabled = Boolean(currentTransactionName) || !validateConfig(config) || delay < 0
 
   return (
     <Fragment>
@@ -110,45 +111,47 @@ export default function App(props: AppProps) {
           </span>
         </div>
       </div>
-      <div class={well}>
-        <h1 class={wellHeader}>Flow Configuration</h1>
-        <span class={inputSpan}>
-          Delay between requests (ms) <input
-            class={input}
-            disabled={configurationInputsDisabled}
-            type="number"
-            value={delay}
-            onInput={updateDelayConfig} />
-        </span>
-      </div>
-      <div class={well}>
-        <h1 class={wellHeader}>Payment flows</h1>
-        <div class={tw`flex gap-2 w-full`}>
-          <Button
-            disabled={transactionButtonsDisabled}
-            name="ping"
-            onClick={runTransaction}
-          >Ping</Button>
-          <Button
-            disabled={transactionButtonsDisabled}
-            name="cash"
-            onClick={runTransaction}
-          >Cash</Button>
-          <Button
-            disabled={transactionButtonsDisabled}
-            name="credit"
-            onClick={runTransaction}
-          >Credit</Button>
-          <Button
-            disabled={transactionButtonsDisabled}
-            name="other"
-            onClick={runTransaction}
-          >Other</Button>
-          <Button
-            disabled={transactionButtonsDisabled}
-            name="cancel"
-            onClick={runTransaction}
-          >Cancel</Button>
+      <div class={horizontalFlow}>
+        <div class={tw`${well} w-1/2`}>
+          <h1 class={wellHeader}>Flow Configuration</h1>
+          <span class={inputSpan}>
+            Delay between requests (ms) <input
+              class={input}
+              disabled={configurationInputsDisabled}
+              type="number"
+              value={delay}
+              onInput={updateDelayConfig} />
+          </span>
+        </div>
+        <div class={well}>
+          <h1 class={wellHeader}>Run payment flows</h1>
+          <div class={tw`flex gap-2 w-full justify-center`}>
+            <Button
+              disabled={transactionButtonsDisabled}
+              name="ping"
+              onClick={runTransaction}
+            >Ping</Button>
+            <Button
+              disabled={transactionButtonsDisabled}
+              name="cash"
+              onClick={runTransaction}
+            >Cash</Button>
+            <Button
+              disabled={transactionButtonsDisabled}
+              name="credit"
+              onClick={runTransaction}
+            >Credit</Button>
+            <Button
+              disabled={transactionButtonsDisabled}
+              name="other"
+              onClick={runTransaction}
+            >Other</Button>
+            <Button
+              disabled={transactionButtonsDisabled}
+              name="cancel"
+              onClick={runTransaction}
+            >Cancel</Button>
+          </div>
         </div>
       </div>
       <div class={well}>
