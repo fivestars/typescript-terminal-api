@@ -1,11 +1,11 @@
 /** @jsx h */
-import { h, Fragment } from "preact";
-import { useState } from "preact/hooks";
-import { IS_BROWSER } from "$fresh/runtime.ts";
 import { tw } from "@twind";
-import { ConfigurationSchema } from '../types/config.ts'
+import { Fragment, h } from "preact";
+import { useState } from "preact/hooks";
+import { useLogger } from '../terminal-api/logger.ts';
+import TransactionRunner from '../terminal-api/transaction.ts';
+import { ConfigurationSchema } from '../types/config.ts';
 import { TransactionTypes } from "../types/transaction.ts";
-import TransactionRunner from '../terminal-api/transaction.ts'
 
 interface AppProps {
   defaultConfig: ConfigurationSchema
@@ -15,11 +15,14 @@ interface AppProps {
 export default function App(props: AppProps) {
   const [config, setConfig] = useState(props?.defaultConfig)
   const [delay, setDelay] = useState(0)
+  const [currentTransactionName, setCurrentTransactionName] = useState<string>()
+  const [logEntries, clearLogs, logger] = useLogger()
 
   const btn = tw`px-3 py-2 border(gray-100 1) bg-gray-100 hover:bg-gray-200 rounded`;
   const well = tw`bg-gray-200 w-full p-5 rounded mb-2`
   const inputSpan = tw`text-center`
   const wellHeader = tw`text-center font-bold mb-4`
+  const logEntry = tw`pb-2`
 
   const updateConfigValue = (evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) => setConfig({
     ...config,
@@ -30,24 +33,35 @@ export default function App(props: AppProps) {
     setDelay(parseInt(evt.currentTarget.value) ?? '')
 
   const runTransaction = (evt: h.JSX.TargetedMouseEvent<HTMLButtonElement>) => {
+    clearLogs()
+
     const transactionName = evt.currentTarget.name
-    const transactionRunner = new TransactionRunner(config, undefined, delay)
+    const transactionRunner = new TransactionRunner(config, logger, delay)
 
-    console.log('Running transaction:', transactionName)
-    console.log('Enum keys:', Object.keys(TransactionTypes))
 
+    logger.log(`Running transaction: ${transactionName}`)
+    setCurrentTransactionName(transactionName)
     if (transactionName in TransactionTypes) {
-      transactionRunner.run(
-        Object.values(TransactionTypes)[Object.keys(TransactionTypes).indexOf(transactionName)]
-      )
+      transactionRunner
+        .run(Object.values(TransactionTypes)[Object.keys(TransactionTypes).indexOf(transactionName)])
+        .finally(() => setCurrentTransactionName(undefined))
     } else if (transactionName === 'ping') {
-      transactionRunner.ping()
+      transactionRunner
+        .ping()
+        .finally(() => setCurrentTransactionName(undefined))
     } else if (transactionName === 'cancel') {
-      transactionRunner.cancel()
+      transactionRunner
+        .cancel()
+        .finally(() => setCurrentTransactionName(undefined))
     } else {
       console.error("Unknown transaction: ", transactionName)
+      setCurrentTransactionName(undefined)
     }
   }
+
+  const configurationInputsDisabled = Boolean(currentTransactionName)
+  // TODO: also validate config before allowing to start transactions
+  const transactionButtonsDisabled = Boolean(currentTransactionName)
 
   return (
     <Fragment>
@@ -56,6 +70,7 @@ export default function App(props: AppProps) {
         <div class={tw`flex gap-4 w-full justify-between`}>
           <span class={inputSpan}>
             Base URL <input
+              disabled={configurationInputsDisabled}
               type="text"
               name="base_url"
               value={config.base_url}
@@ -65,6 +80,7 @@ export default function App(props: AppProps) {
 
           <span class={inputSpan}>
             Token <input
+              disabled={configurationInputsDisabled}
               type="text"
               name="bearer_token"
               value={config.bearer_token}
@@ -73,6 +89,7 @@ export default function App(props: AppProps) {
 
           <span class={inputSpan}>
             POS ID <input
+              disabled={configurationInputsDisabled}
               type="text"
               name="pos_id"
               value={config.pos_id}
@@ -81,6 +98,7 @@ export default function App(props: AppProps) {
 
           <span class={inputSpan}>
             Terminal ID <input
+              disabled={configurationInputsDisabled}
               type="text"
               name="terminal_id"
               value={config.terminal_id}
@@ -91,7 +109,8 @@ export default function App(props: AppProps) {
       <div class={well}>
         <h1 class={wellHeader}>Flow Configuration</h1>
         <div class={tw`flex gap-2 w-full`}>
-          Delay between requests <input
+          Delay between requests (ms) <input
+            disabled={configurationInputsDisabled}
             type="number"
             value={delay}
             onInput={updateDelayConfig} />
@@ -100,15 +119,41 @@ export default function App(props: AppProps) {
       <div class={well}>
         <h1 class={wellHeader}>Payment flows</h1>
         <div class={tw`flex gap-2 w-full`}>
-          <button class={btn} name="ping" onClick={runTransaction}>Ping</button>
-          <button class={btn} name="cash" onClick={runTransaction}>Cash</button>
-          <button class={btn} name="credit" onClick={runTransaction}>Credit</button>
-          <button class={btn} name="other" onClick={runTransaction}>Other</button>
-          <button class={btn} name="cancel" onClick={runTransaction}>Cancel</button>
+          <button
+            disabled={transactionButtonsDisabled}
+            class={btn}
+            name="ping"
+            onClick={runTransaction}
+          >Ping</button>
+          <button
+            disabled={transactionButtonsDisabled}
+            class={btn}
+            name="cash"
+            onClick={runTransaction}
+          >Cash</button>
+          <button
+            disabled={transactionButtonsDisabled}
+            class={btn}
+            name="credit"
+            onClick={runTransaction}
+          >Credit</button>
+          <button
+            disabled={transactionButtonsDisabled}
+            class={btn}
+            name="other"
+            onClick={runTransaction}
+          >Other</button>
+          <button
+            disabled={transactionButtonsDisabled}
+            class={btn}
+            name="cancel"
+            onClick={runTransaction}
+          >Cancel</button>
         </div>
       </div>
       <div class={well}>
         <h1 class={wellHeader}>Logs</h1>
+        {logEntries.map(log => <p class={logEntry}>{log}</p>)}
       </div>
     </Fragment>
   );
