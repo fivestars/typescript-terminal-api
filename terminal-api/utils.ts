@@ -6,50 +6,16 @@ import {
   red,
 } from "https://deno.land/std@0.123.0/fmt/colors.ts";
 
+import {
+  CustomerTerminalStateTypes, TransactionCancelStateTypes, CustomerUidAndDiscount
+} from '../types/transaction.ts'
+
 const BEARER_TOKEN: string = coffee.get("settings.bearer_token").string();
 const POS_ID: string = coffee.get("settings.pos_id").string();
 const URL: string = coffee.get("settings.base_url").string() +
   coffee.get("settings.terminal_id").string() + "/";
 
 export const log = console.log;
-
-export enum CustomerTerminalStateTypes {
-  IDLE = "IDLE",
-  CHECKING_IN = "CHECKING_IN",
-  SELECTING_DISCOUNT = "SELECTING_DISCOUNT",
-  AWAITING_PAYMENT = "AWAITING_PAYMENT",
-  AWAITING_CHECKOUT = "AWAITING_CHECKOUT",
-}
-
-export enum transactionTypes {
-  cash = "CASH",
-  credit = "CREDIT",
-  other = "OTHER",
-}
-
-export enum TransactionCancelStateTypes {
-  TRANSACTION_CANCELLED = "TRANSACTION_CANCELLED",
-  UNABLE_TO_CANCEL_TRANSACTION = "UNABLE_TO_CANCEL_TRANSACTION",
-}
-
-export interface customerUidAndDiscount {
-  uid: string;
-  discount: string;
-}
-
-export enum TransactionStatusTypes {
-  CUSTOMER_OR_DISCOUNT_MISMATCH = "CUSTOMER_OR_DISCOUNT_MISMATCH",
-  TRANSACTION_STARTED = "TRANSACTION_STARTED",
-  PRIOR_TRANSACTION_ALREADY_IN_PROGRESS =
-    "PRIOR_TRANSACTION_ALREADY_IN_PROGRESS",
-  DUPLICATE_POS_CHECKOUT_ID = "DUPLICATE_POS_CHECKOUT_ID",
-  TRANSACTION_PRECONDITIONS_NOT_MET = "TRANSACTION_PRECONDITIONS_NOT_MET",
-  PENDING = "PENDING",
-  SUCCESSFUL = "SUCCESSFUL",
-  CANCELED_BY_POS = "CANCELED_BY_POS",
-  CANCELED_BY_CUSTOMER = "CANCELED_BY_CUSTOMER",
-  TRANSACTION_CANCELED = "TRANSACTION_CANCELED",
-}
 
 export function printOutcome(
   successful = false,
@@ -106,7 +72,7 @@ export async function httpRequest(
 
 export async function getCustomers(
   thenCancel = false,
-): Promise<customerUidAndDiscount> {
+): Promise<CustomerUidAndDiscount> {
   let discount = "";
 
   // Call the customers endpoint again on every one of
@@ -151,16 +117,16 @@ export async function getCustomers(
 
   while (
     returned_json.device.device_state_title ==
-      (CustomerTerminalStateTypes.SELECTING_DISCOUNT ||
-        CustomerTerminalStateTypes.CHECKING_IN)
+    (CustomerTerminalStateTypes.SELECTING_DISCOUNT ||
+      CustomerTerminalStateTypes.CHECKING_IN)
   ) {
     const DEVICE_STATE = returned_json.device.device_state_title;
     log(`Customer Terminal State: ${DEVICE_STATE}`);
 
     if (
       DEVICE_STATE ==
-        (CustomerTerminalStateTypes.AWAITING_CHECKOUT ||
-          CustomerTerminalStateTypes.AWAITING_PAYMENT)
+      (CustomerTerminalStateTypes.AWAITING_CHECKOUT ||
+        CustomerTerminalStateTypes.AWAITING_PAYMENT)
     ) {
       break;
     }

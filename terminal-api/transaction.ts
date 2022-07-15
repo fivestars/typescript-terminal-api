@@ -4,11 +4,14 @@ import {
   httpRequest,
   log,
   printOutcome,
-  TransactionStatusTypes,
-  transactionTypes,
 } from "./utils.ts";
 
-export async function runTransaction(transactionType: transactionTypes) {
+import {
+  TransactionStatusTypes,
+  TransactionTypes
+} from '../types/transaction.ts'
+
+export async function runTransaction(transactionType: TransactionTypes) {
   const customerUidAndDiscount = await getCustomers(
     false,
   );

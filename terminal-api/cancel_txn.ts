@@ -3,10 +3,13 @@ import {
   getCustomers,
   httpRequest,
   log,
-  printOutcome,
-  TransactionStatusTypes,
-  transactionTypes,
+  printOutcome
 } from "./utils.ts";
+
+import {
+  TransactionStatusTypes,
+  TransactionTypes
+} from '../types/transaction.ts'
 
 export async function cancelTransaction() {
   const customerUidAndDiscount = await getCustomers(
@@ -17,7 +20,7 @@ export async function cancelTransaction() {
   const checkoutData = JSON.stringify({
     checkout: {
       pos_checkout_id: posCheckoutId,
-      type: transactionTypes.cash,
+      type: TransactionTypes.cash,
       total: 750,
       customer_account_uid: customerUidAndDiscount.uid,
       discounts_applied: [],
