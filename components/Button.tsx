@@ -1,11 +1,6 @@
 /** @jsx h */
 import { tw } from "@twind";
-import { Fragment, h } from "preact";
-import { useState } from "preact/hooks";
-import { useLogger } from '../terminal-api/logger.ts';
-import TransactionRunner from '../terminal-api/transaction.ts';
-import { ConfigurationSchema } from '../types/config.ts';
-import { TransactionTypes } from "../types/transaction.ts";
+import { h } from "preact";
 
 
 export default function Button(props: h.JSX.HTMLAttributes<HTMLButtonElement>) {

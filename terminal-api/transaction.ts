@@ -1,17 +1,16 @@
+import { ConfigurationSchema } from '../types/config.ts';
 import {
   generateIds,
   getCustomers,
   httpRequest
 } from "./utils.ts";
-import { ConfigurationSchema } from '../types/config.ts'
 
 import {
   PingResponse,
   TransactionStatusTypes,
   TransactionTypes
-} from '../types/transaction.ts'
-import { ILogger } from "./logger.ts";
-import { ConsoleLogger } from './logger.ts'
+} from '../types/transaction.ts';
+import { ConsoleLogger, ILogger } from "./logger.ts";
 
 export default class TransactionRunner {
   private configuration: ConfigurationSchema
@@ -40,7 +39,7 @@ export default class TransactionRunner {
 
     const [posCheckoutId, posOrderId] = generateIds();
 
-    const checkoutData = JSON.stringify({
+    const checkoutData = {
       checkout: {
         pos_checkout_id: posCheckoutId,
         type: transactionType,
@@ -70,21 +69,19 @@ export default class TransactionRunner {
         subtotal: 0,
         tax: 125,
       },
-    });
+    };
 
     // POST to checkouts
-    this.logger.log(checkoutData);
-    let resp = await httpRequest("checkouts", "POST", checkoutData, this.configuration);
-    let returned_json = await resp.json();
+    let [resp, returned_json] = await httpRequest(
+      "checkouts", "POST", JSON.stringify(checkoutData), this.configuration, this.logger);
 
     if (
       resp.status == 200 &&
       returned_json.status == TransactionStatusTypes.TRANSACTION_STARTED
     ) {
-      await this.applyDelay()
+      await this.applyDelay();
 
-      resp = await httpRequest(`checkouts/${posCheckoutId}`, "GET", null, this.configuration);
-      returned_json = await resp.json();
+      [resp, returned_json] = await httpRequest(`checkouts/${posCheckoutId}`, "GET", null, this.configuration, this.logger);
 
       const transactionStatus = returned_json.status;
 
@@ -95,7 +92,7 @@ export default class TransactionRunner {
       this.logger.log(`Transaction Status: ${transactionStatus}`);
 
       while (transactionStatus != TransactionStatusTypes.SUCCESSFUL) {
-        resp = await httpRequest(`checkouts/${posCheckoutId}`, "GET", null, this.configuration);
+        [resp, returned_json] = await httpRequest(`checkouts/${posCheckoutId}`, "GET", null, this.configuration, this.logger);
         this.logger.printOutcome(true, resp);
       }
     } else {
@@ -104,14 +101,11 @@ export default class TransactionRunner {
   }
 
   public async ping(): Promise<PingResponse> {
-    const resp = await httpRequest("ping", "GET", null, this.configuration);
-    const returned_json = await resp.json();
+    const [resp, returned_json] = await httpRequest("ping", "GET", null, this.configuration, this.logger);
 
     resp.status == 200 && returned_json.connected == true
       ? this.logger.printOutcome(true, resp)
       : this.logger.printOutcome(false, resp);
-
-    this.logger.log(returned_json);
 
     return returned_json
   }
@@ -122,7 +116,7 @@ export default class TransactionRunner {
 
     await this.applyDelay()
 
-    const checkoutData = JSON.stringify({
+    const checkoutData = {
       checkout: {
         pos_checkout_id: posCheckoutId,
         type: TransactionTypes.cash,
@@ -150,19 +144,18 @@ export default class TransactionRunner {
         subtotal: 0,
         tax: 125,
       },
-    });
+    };
 
     // POST to checkouts
-    this.logger.log(checkoutData);
-    let resp = await httpRequest("checkouts", "POST", checkoutData, this.configuration);
-    let returned_json = await resp.json();
+    let [resp, returned_json] = await httpRequest(
+      "checkouts", "POST", JSON.stringify(checkoutData), this.configuration, this.logger);
 
     if (
       resp.status == 200 &&
       returned_json.status == TransactionStatusTypes.TRANSACTION_STARTED
     ) {
-      resp = await httpRequest(`checkouts/${posCheckoutId}/cancel`, "POST", null, this.configuration);
-      returned_json = await resp.json();
+      [resp, returned_json] = await httpRequest(
+        `checkouts/${posCheckoutId}/cancel`, "POST", null, this.configuration, this.logger);
 
       if (returned_json.status == TransactionStatusTypes.TRANSACTION_CANCELED) {
         this.logger.printOutcome(true, resp);

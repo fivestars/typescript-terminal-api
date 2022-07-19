@@ -1,17 +1,20 @@
+import { ConfigurationSchema } from '../types/config.ts';
 import {
-  CustomerTerminalStateTypes, TransactionCancelStateTypes, CustomerUidAndDiscount
-} from '../types/transaction.ts'
-import { ConfigurationSchema } from '../types/config.ts'
+  CustomerTerminalStateTypes, CustomerUidAndDiscount, TransactionCancelStateTypes
+} from '../types/transaction.ts';
+import { UnpackedResponse } from '../types/utils.ts';
 import { ILogger } from "./logger.ts";
-
-// const BEARER_TOKEN: string = coffee.get("settings.bearer_token").string();
-// const POS_ID: string = coffee.get("settings.pos_id").string();
-// const URL: string = coffee.get("settings.base_url").string() +
-//   coffee.get("settings.terminal_id").string() + "/";
 
 
 export function generateIds(): [string, string] {
   return [globalThis.crypto.randomUUID(), globalThis.crypto.randomUUID()];
+}
+
+async function unpackResponse(response: Response): Promise<UnpackedResponse> {
+  return [
+    response,
+    response.ok ? await response.json() : undefined
+  ];
 }
 
 export async function httpRequest(
@@ -19,14 +22,15 @@ export async function httpRequest(
   method: string,
   body: string | null,
   config: ConfigurationSchema,
+  logger: ILogger,
   timeout = 120000
-): Promise<Response> {
-  let response: Response;
+): Promise<UnpackedResponse> {
+  let response: UnpackedResponse;
 
   try {
     const c = new AbortController();
     const id = setTimeout(() => c.abort(), timeout);
-    response = await fetch(`${config.base_url}${config.terminal_id}/${endpoint}`, {
+    response = await fetch(...logger.logRequest(`${config.base_url}${config.terminal_id}/${endpoint}`, {
       signal: c.signal,
       method: method,
       headers: {
@@ -36,12 +40,14 @@ export async function httpRequest(
         "Accept": "application/json",
       },
       body: body,
-    });
+    }))
+      .then(unpackResponse)
+      .then(response => logger.logResponse(response));
     clearTimeout(id);
     return response;
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
-      response = new Response(null, { status: 408 });
+      response = [new Response(null, { status: 408 })]
     } else {
       // response = new Response(null, { status: 503 });
       throw err;
@@ -61,8 +67,7 @@ export async function getCustomers(
   // these until the customer object is no longer null
   // Possible status values that will be returned:
   // IDLE | CHECKING_IN | SELECTING_DISCOUNT | AWAITING_PAYMENT | AWAITING_CHECKOUT
-  let resp = await httpRequest("customers", "GET", null, config);
-  let returned_json = await resp.json();
+  let [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger);
 
   if (resp.status == 200) {
     while (returned_json.customer == null) {
@@ -73,8 +78,9 @@ export async function getCustomers(
         DEVICE_STATE == CustomerTerminalStateTypes.CHECKING_IN && thenCancel
       ) {
         // Cancel the transaction immediately
-        resp = await httpRequest("checkouts/cancel", "POST", null, config);
+        [resp, returned_json] = await httpRequest("checkouts/cancel", "POST", null, config, logger);
 
+        // FIXME: second condition is probably wrong or incomplete
         if (
           resp.status == 200 &&
           TransactionCancelStateTypes.TRANSACTION_CANCELLED
@@ -86,16 +92,14 @@ export async function getCustomers(
         return Promise.resolve({ discount: discount, uid: "" });
       }
 
-      resp = await httpRequest("customers", "GET", null, config);
-      returned_json = await resp.json();
+      [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger);
     }
   } else {
     logger.printOutcome(false, resp);
     return Promise.resolve({ discount: discount, uid: "" });
   }
 
-  resp = await httpRequest("customers", "GET", null, config);
-  returned_json = await resp.json();
+  [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger);
 
   while (
     returned_json.device.device_state_title ==
@@ -113,11 +117,10 @@ export async function getCustomers(
       break;
     }
 
-    resp = await httpRequest("customers", "GET", null, config);
-    returned_json = await resp.json();
+    [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger);
   }
 
-  logger.log(`Customer data: ${JSON.stringify(returned_json)}`);
+  logger.log("Customer data: ", returned_json);
 
   if (returned_json.customer.discounts.length > 0) {
     discount = returned_json.customer.discounts[0].uid;

@@ -3,6 +3,7 @@ import { tw } from "@twind";
 import { Fragment, h } from "preact";
 import { useState } from "preact/hooks";
 import Button from '../components/Button.tsx';
+import LogEntry from "../components/LogEntry.tsx";
 import { validateConfig } from '../config/index.ts';
 import { useLogger } from '../terminal-api/logger.ts';
 import TransactionRunner from '../terminal-api/transaction.ts';
@@ -24,7 +25,7 @@ export default function App(props: AppProps) {
   const inputSpan = tw`text-center flex flex-col flex-grow-0 w-full`
   const input = tw`p-2 rounded border border-solid border-gray-400`
   const wellHeader = tw`text-center font-bold mb-4`
-  const logEntry = tw`pb-3 w-full whitespace-normal break-words`
+
   const horizontalFlow = tw`flex flex-row gap-4`
 
   const updateConfigValue = (evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) => setConfig({
@@ -154,9 +155,10 @@ export default function App(props: AppProps) {
           </div>
         </div>
       </div>
-      <div class={well}>
+      <div class={`${tw`pt-4`}`}>
         <h1 class={wellHeader}>Logs</h1>
-        {logEntries.map(log => <p class={logEntry}>{log}</p>)}
+        {logEntries.map(log => <LogEntry log={log} />)}
+        {!logEntries.length && 'Logs are empty.'}
       </div>
     </Fragment>
   );
