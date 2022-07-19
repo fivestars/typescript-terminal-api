@@ -15,7 +15,7 @@ const logTypeLabels = {
     [LogType.LOG]: 'Log message',
     [LogType.REQUEST]: 'Request',
     [LogType.RESPONSE]: 'Response',
-    [LogType.OUTCOME]: 'Result'
+    [LogType.OUTCOME]: 'Flow outcome'
 }
 
 export default function LogEntry(props: LogEntryProps) {
@@ -42,7 +42,7 @@ export default function LogEntry(props: LogEntryProps) {
     ).join(' ')
 
     const renderOutcome = ({ successful, response }: OutcomeLog) => (
-        `Flow Outcome: ${successful ? 'Success' : 'Failed'} >> Response status: ${response.status}`
+        `${successful ? 'Success' : 'Failed'} >> Response status: ${response.status}`
     )
 
     const renderRequest = (log: RequestLog) => (

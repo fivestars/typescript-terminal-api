@@ -32,7 +32,7 @@ export async function httpRequest(
     if (delayInMillis > 0) {
       logger.log('Applying delay')
       await new Promise(resolve => setTimeout(resolve, delayInMillis))
-      logger.log('Resuming')
+      logger.log('Delay has passed, resuming execution')
     }
 
     const c = new AbortController();
