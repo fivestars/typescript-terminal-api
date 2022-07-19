@@ -23,19 +23,8 @@ export default class TransactionRunner {
     this.delayInMillis = delayInMillis
   }
 
-  private async applyDelay() {
-    if (this.delayInMillis > 0) {
-      this.logger.log('Applying delay')
-      const delay = this.delayInMillis
-      await new Promise(resolve => setTimeout(resolve, delay))
-      this.logger.log('Resuming')
-    }
-  }
-
   public async run(transactionType: TransactionTypes) {
-    const customerUidAndDiscount = await getCustomers(false, this.configuration, this.logger)
-
-    await this.applyDelay()
+    const customerUidAndDiscount = await getCustomers(false, this.configuration, this.logger, this.delayInMillis)
 
     const [posCheckoutId, posOrderId] = generateIds();
 
@@ -73,15 +62,15 @@ export default class TransactionRunner {
 
     // POST to checkouts
     let [resp, returned_json] = await httpRequest(
-      "checkouts", "POST", JSON.stringify(checkoutData), this.configuration, this.logger);
+      "checkouts", "POST", JSON.stringify(checkoutData), this.configuration, this.logger, this.delayInMillis);
 
     if (
       resp.status == 200 &&
       returned_json.status == TransactionStatusTypes.TRANSACTION_STARTED
     ) {
-      await this.applyDelay();
 
-      [resp, returned_json] = await httpRequest(`checkouts/${posCheckoutId}`, "GET", null, this.configuration, this.logger);
+      [resp, returned_json] = await httpRequest(
+        `checkouts/${posCheckoutId}`, "GET", null, this.configuration, this.logger, this.delayInMillis);
 
       const transactionStatus = returned_json.status;
 
@@ -92,7 +81,8 @@ export default class TransactionRunner {
       this.logger.log(`Transaction Status: ${transactionStatus}`);
 
       while (transactionStatus != TransactionStatusTypes.SUCCESSFUL) {
-        [resp, returned_json] = await httpRequest(`checkouts/${posCheckoutId}`, "GET", null, this.configuration, this.logger);
+        [resp, returned_json] = await httpRequest(
+          `checkouts/${posCheckoutId}`, "GET", null, this.configuration, this.logger, this.delayInMillis);
         this.logger.printOutcome(true, resp);
       }
     } else {
@@ -101,7 +91,8 @@ export default class TransactionRunner {
   }
 
   public async ping(): Promise<PingResponse> {
-    const [resp, returned_json] = await httpRequest("ping", "GET", null, this.configuration, this.logger);
+    const [resp, returned_json] = await httpRequest(
+      "ping", "GET", null, this.configuration, this.logger, 0);
 
     resp.status == 200 && returned_json.connected == true
       ? this.logger.printOutcome(true, resp)
@@ -111,10 +102,8 @@ export default class TransactionRunner {
   }
 
   public async cancel() {
-    const customerUidAndDiscount = await getCustomers(false, this.configuration, this.logger);
+    const customerUidAndDiscount = await getCustomers(false, this.configuration, this.logger, this.delayInMillis);
     const [posCheckoutId, posOrderId] = generateIds();
-
-    await this.applyDelay()
 
     const checkoutData = {
       checkout: {
@@ -148,14 +137,14 @@ export default class TransactionRunner {
 
     // POST to checkouts
     let [resp, returned_json] = await httpRequest(
-      "checkouts", "POST", JSON.stringify(checkoutData), this.configuration, this.logger);
+      "checkouts", "POST", JSON.stringify(checkoutData), this.configuration, this.logger, this.delayInMillis);
 
     if (
       resp.status == 200 &&
       returned_json.status == TransactionStatusTypes.TRANSACTION_STARTED
     ) {
       [resp, returned_json] = await httpRequest(
-        `checkouts/${posCheckoutId}/cancel`, "POST", null, this.configuration, this.logger);
+        `checkouts/${posCheckoutId}/cancel`, "POST", null, this.configuration, this.logger, this.delayInMillis);
 
       if (returned_json.status == TransactionStatusTypes.TRANSACTION_CANCELED) {
         this.logger.printOutcome(true, resp);

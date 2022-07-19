@@ -23,11 +23,18 @@ export async function httpRequest(
   body: string | null,
   config: ConfigurationSchema,
   logger: ILogger,
+  delayInMillis: number,
   timeout = 120000
 ): Promise<UnpackedResponse> {
   let response: UnpackedResponse;
 
   try {
+    if (delayInMillis > 0) {
+      logger.log('Applying delay')
+      await new Promise(resolve => setTimeout(resolve, delayInMillis))
+      logger.log('Resuming')
+    }
+
     const c = new AbortController();
     const id = setTimeout(() => c.abort(), timeout);
     response = await fetch(...logger.logRequest(`${config.base_url}${config.terminal_id}/${endpoint}`, {
@@ -59,7 +66,8 @@ export async function httpRequest(
 export async function getCustomers(
   thenCancel = false,
   config: ConfigurationSchema,
-  logger: ILogger
+  logger: ILogger,
+  delayInMillis: number
 ): Promise<CustomerUidAndDiscount> {
   let discount = "";
 
@@ -67,7 +75,7 @@ export async function getCustomers(
   // these until the customer object is no longer null
   // Possible status values that will be returned:
   // IDLE | CHECKING_IN | SELECTING_DISCOUNT | AWAITING_PAYMENT | AWAITING_CHECKOUT
-  let [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger);
+  let [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger,delayInMillis);
 
   if (resp.status == 200) {
     while (returned_json.customer == null) {
@@ -78,7 +86,7 @@ export async function getCustomers(
         DEVICE_STATE == CustomerTerminalStateTypes.CHECKING_IN && thenCancel
       ) {
         // Cancel the transaction immediately
-        [resp, returned_json] = await httpRequest("checkouts/cancel", "POST", null, config, logger);
+        [resp, returned_json] = await httpRequest("checkouts/cancel", "POST", null, config, logger, delayInMillis);
 
         // FIXME: second condition is probably wrong or incomplete
         if (
@@ -92,14 +100,14 @@ export async function getCustomers(
         return Promise.resolve({ discount: discount, uid: "" });
       }
 
-      [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger);
+      [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger,delayInMillis);
     }
   } else {
     logger.printOutcome(false, resp);
     return Promise.resolve({ discount: discount, uid: "" });
   }
 
-  [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger);
+  [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger, delayInMillis);
 
   while (
     returned_json.device.device_state_title ==
@@ -117,7 +125,7 @@ export async function getCustomers(
       break;
     }
 
-    [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger);
+    [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger, delayInMillis);
   }
 
   logger.log("Customer data: ", returned_json);
