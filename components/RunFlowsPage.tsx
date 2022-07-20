@@ -8,7 +8,7 @@ import { cancelTransaction, runTransaction, useTransactionStatusMonitoring } fro
 import { useCustomerServiceMonitoring } from "../terminal-api/customer.ts";
 import { ILogger } from '../terminal-api/logger.ts';
 import { ConfigurationSchema } from '../types/config.ts';
-import { CreateTransactionResponse, CustomerTerminalStateTypes, Discount, TransactionStatusTypes, TransactionTypes } from "../types/transaction.ts";
+import { COMPLETED_FAILED_TRANSACTION_STATES, COMPLETED_SUCCESS_TRANSACTION_STATES, CreateTransactionResponse, CustomerTerminalStateTypes, Discount, TransactionStatusTypes, TransactionTypes } from "../types/transaction.ts";
 import Modal from "./Modal.tsx";
 import { useEffect } from 'preact/hooks'
 
@@ -66,21 +66,14 @@ export default function RunFlowsPage(props: Props) {
     }
 
     const status = transactionStatus?.status
-    switch (status) {
-      case TransactionStatusTypes.TRANSACTION_CANCELED:
-      case TransactionStatusTypes.SUCCESSFUL:
+    if (status) {
+      if (COMPLETED_SUCCESS_TRANSACTION_STATES.includes(status)) {
         logger.printOutcome(true, new Response(null, { status: 200, statusText: status }))
         clearTransactionState()
-        break;
-      case TransactionStatusTypes.CANCELED_BY_CUSTOMER:
-      case TransactionStatusTypes.CANCELED_BY_POS:
-      case TransactionStatusTypes.CUSTOMER_OR_DISCOUNT_MISMATCH:
-      case TransactionStatusTypes.DUPLICATE_POS_CHECKOUT_ID:
-      case TransactionStatusTypes.PRIOR_TRANSACTION_ALREADY_IN_PROGRESS:
-      case TransactionStatusTypes.TRANSACTION_PRECONDITIONS_NOT_MET:
+      } else if (COMPLETED_FAILED_TRANSACTION_STATES.includes(status)) {
         logger.printOutcome(false, new Response(null, { status: 200, statusText: status }))
         clearTransactionState()
-        break;
+      }
     }
   }, [transactionStatus])
 

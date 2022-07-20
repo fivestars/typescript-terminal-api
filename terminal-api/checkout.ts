@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'preact/hooks';
 import { ConfigurationSchema } from "../types/config.ts";
-import { Discount, TransactionStatusResponse, TransactionTypes } from "../types/transaction.ts";
+import { COMPLETED_TRANSACTION_STATES, Discount, TransactionStatusResponse, TransactionTypes } from "../types/transaction.ts";
 import { ILogger } from "./logger.ts";
 import { createSampleCheckoutData, generateIds, httpRequest } from "./utils.ts";
 
@@ -43,7 +43,7 @@ export function useTransactionStatusMonitoring(
                 if (resp.ok && !cancel) {
                     setTransactionStatus(returned_json)
                 }
-                if (!cancel) {
+                if (!cancel && !COMPLETED_TRANSACTION_STATES.includes(returned_json?.status)) {
                     timeoutID = setTimeout(getTransactionStatus, 0)
                 }
             }

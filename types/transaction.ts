@@ -35,6 +35,24 @@ export enum TransactionStatusTypes {
   TRANSACTION_CANCELED = "TRANSACTION_CANCELED",
 }
 
+export const COMPLETED_SUCCESS_TRANSACTION_STATES = [
+  TransactionStatusTypes.TRANSACTION_CANCELED,
+  TransactionStatusTypes.SUCCESSFUL
+]
+
+export const COMPLETED_FAILED_TRANSACTION_STATES = [
+  TransactionStatusTypes.CANCELED_BY_CUSTOMER,
+  TransactionStatusTypes.CANCELED_BY_POS,
+  TransactionStatusTypes.CUSTOMER_OR_DISCOUNT_MISMATCH,
+  TransactionStatusTypes.DUPLICATE_POS_CHECKOUT_ID,
+  TransactionStatusTypes.PRIOR_TRANSACTION_ALREADY_IN_PROGRESS,
+  TransactionStatusTypes.TRANSACTION_PRECONDITIONS_NOT_MET
+]
+
+export const COMPLETED_TRANSACTION_STATES = [
+  ...COMPLETED_SUCCESS_TRANSACTION_STATES, ...COMPLETED_FAILED_TRANSACTION_STATES
+]
+
 export interface PingResponse {
   connected: boolean
 }
