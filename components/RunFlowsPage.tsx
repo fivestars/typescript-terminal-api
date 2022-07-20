@@ -83,59 +83,85 @@ export default function RunFlowsPage(props: Props) {
     customerInformation?.device?.device_state_title === CustomerTerminalStateTypes.SELECTING_DISCOUNT
   const cancelTransactionButtonDisabled = !currentTransaction || isCancellingTransaction
 
-  const isModalVisible = customerInformation?.customer?.discounts?.length &&
-    approvedDiscount === undefined
+  const isModalVisible = Boolean(customerInformation?.customer?.discounts?.length &&
+    approvedDiscount === undefined)
 
   return (
-    <div class={horizontalFlow}>
-      <div class={tw`${well} w-1/2`}>
-        <h1 class={wellHeader}>Customer information</h1>
-        {customerInformation && (
-          <div>
-            Latest customer information:
-            <Inspector data={customerInformation} search={false} />
+    <div>
+      <div class={horizontalFlow}>
+        <div class={tw`${well} w-1/2`}>
+          <h1 class={wellHeader}>Status</h1>
+          {!customerInformation?.customer && 'Waiting for customer to checkin'}
+          {customerInformation?.device?.device_state_title === CustomerTerminalStateTypes.SELECTING_DISCOUNT &&
+            'User is selecting a discount'}
+          {customerInformation?.device?.device_state_title === CustomerTerminalStateTypes.AWAITING_CHECKOUT
+            && !currentTransaction
+            && 'User is waiting for checkout, run a checkout transaction'}
+          {!!(currentTransaction) && (
+            'A transaction is running, you may cancel it'
+          )}
+        </div>
+        <div class={tw`${well} w-1/2`}>
+          <h1 class={wellHeader}>Flow Configuration</h1>
+          <span class={inputSpan}>
+            Delay between requests (ms) <input
+              class={input}
+              disabled={configurationInputsDisabled}
+              type="number"
+              value={delay}
+              onInput={updateDelayConfig} />
+          </span>
+        </div>
+        <div class={well}>
+          <h1 class={wellHeader}>Run checkout transactions</h1>
+          <div class={tw`flex gap-2 w-full justify-center`}>
+            <Button
+              disabled={transactionButtonsDisabled}
+              name="cash"
+              onClick={onClickTransactionButton}
+            >Cash</Button>
+            <Button
+              disabled={transactionButtonsDisabled}
+              name="credit"
+              onClick={onClickTransactionButton}
+            >Credit</Button>
+            <Button
+              disabled={transactionButtonsDisabled}
+              name="other"
+              onClick={onClickTransactionButton}
+            >Other</Button>
           </div>
-        )}
-        {!customerInformation && 'Waiting for customer to checkin'}
-      </div>
-      <div class={tw`${well} w-1/2`}>
-        <h1 class={wellHeader}>Flow Configuration</h1>
-        <span class={inputSpan}>
-          Delay between requests (ms) <input
-            class={input}
-            disabled={configurationInputsDisabled}
-            type="number"
-            value={delay}
-            onInput={updateDelayConfig} />
-        </span>
-      </div>
-      <div class={well}>
-        <h1 class={wellHeader}>Run payment flows</h1>
-        <div class={tw`flex gap-2 w-full justify-center`}>
-          <Button
-            disabled={transactionButtonsDisabled}
-            name="cash"
-            onClick={onClickTransactionButton}
-          >Cash</Button>
-          <Button
-            disabled={transactionButtonsDisabled}
-            name="credit"
-            onClick={onClickTransactionButton}
-          >Credit</Button>
-          <Button
-            disabled={transactionButtonsDisabled}
-            name="other"
-            onClick={onClickTransactionButton}
-          >Other</Button>
-        </div>
-        <div class={tw`flex gap-2 w-full justify-center pt-3`}>
-          <Button
-            disabled={cancelTransactionButtonDisabled}
-            name="cancel"
-            onClick={onClickCancelTransaction}
-          >Cancel</Button>
+          <div class={tw`flex gap-2 w-full justify-center pt-3`}>
+            <Button
+              disabled={cancelTransactionButtonDisabled}
+              name="cancel"
+              onClick={onClickCancelTransaction}
+            >Cancel</Button>
+          </div>
         </div>
       </div>
+      {Boolean(customerInformation || currentTransaction || transactionStatus) && (
+        <div class={horizontalFlow}>
+          {!!customerInformation && (
+            <div class={tw`${well}`}>
+              <h1 class={wellHeader}>Latest customer endpoint information</h1>
+              <div>
+                Device state: {customerInformation.device.device_state_title}
+                <Inspector data={customerInformation} search={false} />
+              </div>
+            </div>
+          )}
+          {!!currentTransaction && (
+            <div class={tw`${well}`}>
+              <h1 class={wellHeader}>Current transaction information</h1>
+              <div>
+                Transaction state: {transactionStatus?.status ?? currentTransaction?.status}
+                <Inspector data={transactionStatus ?? currentTransaction} search={false} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {isModalVisible && (
         <Modal>
           <div>The customer has selected a discount</div>

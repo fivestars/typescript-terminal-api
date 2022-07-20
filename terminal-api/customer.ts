@@ -6,7 +6,7 @@ import { ILogger } from "./logger.ts";
 import { httpRequest } from "./utils.ts";
 
 
-export function useCustomerServiceMonitoring(config: ConfigurationSchema, logger: ILogger) {
+export function useCustomerServiceMonitoring(config: ConfigurationSchema, logger: ILogger):[CustomerInformation | undefined] {
     const [customerInformation, setCustomerInformation] = useState<CustomerInformation>()
 
     useEffect(() => {
