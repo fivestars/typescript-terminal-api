@@ -3,6 +3,7 @@ import { tw } from "@twind";
 import { h } from "preact";
 import { useState } from 'preact/hooks';
 import Button from "../components/Button.tsx";
+import { validateConfig } from "../config/index.ts";
 import { ILogger } from "../terminal-api/logger.ts";
 import TransactionRunner from "../terminal-api/transaction.ts";
 import { ConfigurationSchema } from '../types/config.ts';
@@ -36,6 +37,8 @@ export default function ConfigurationPage(props: Props) {
       .finally(() => setTestingConnection(false))
   }
 
+  const configurationInputsDisabled = Boolean(testingConnection)
+
   return (
     <div class={well}>
       <h1 class={wellHeader}>Configuration</h1>
@@ -43,6 +46,7 @@ export default function ConfigurationPage(props: Props) {
         <span class={inputSpan}>
           Base URL <input
             class={input}
+            disabled={configurationInputsDisabled}
             type="text"
             name="base_url"
             value={config.base_url}
@@ -53,6 +57,7 @@ export default function ConfigurationPage(props: Props) {
         <span class={inputSpan}>
           Token <input
             class={input}
+            disabled={configurationInputsDisabled}
             type="text"
             name="bearer_token"
             value={config.bearer_token}
@@ -62,6 +67,7 @@ export default function ConfigurationPage(props: Props) {
         <span class={inputSpan}>
           POS ID <input
             class={input}
+            disabled={configurationInputsDisabled}
             type="text"
             name="pos_id"
             value={config.pos_id}
@@ -71,6 +77,7 @@ export default function ConfigurationPage(props: Props) {
         <span class={inputSpan}>
           Terminal ID <input
             class={input}
+            disabled={configurationInputsDisabled}
             type="text"
             name="terminal_id"
             value={config.terminal_id}
@@ -79,7 +86,7 @@ export default function ConfigurationPage(props: Props) {
       </div>
       <div class={tw`pt-4 w-full text-center`}>
         <Button
-          disabled={testingConnection}
+          disabled={testingConnection || !validateConfig(config)}
           onClick={onTestConnection}
         >Test connection (ping)</Button>
       </div>

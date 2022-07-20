@@ -1,6 +1,6 @@
 import { ConfigurationSchema } from '../types/config.ts';
 import {
-  CustomerTerminalStateTypes, CustomerUidAndDiscount, TransactionCancelStateTypes
+  CustomerTerminalStateTypes, CustomerUidAndDiscount, Discount, TransactionCancelStateTypes, TransactionTypes
 } from '../types/transaction.ts';
 import { UnpackedResponse } from '../types/utils.ts';
 import { ILogger } from "./logger.ts";
@@ -9,6 +9,41 @@ import { ILogger } from "./logger.ts";
 export function generateIds(): [string, string] {
   return [globalThis.crypto.randomUUID(), globalThis.crypto.randomUUID()];
 }
+
+export const createSampleCheckoutData = (
+  posCheckoutId: string, posOrderId: string, transactionType: TransactionTypes, customerID: string,
+  discount: Discount | null
+) => ({
+  checkout: {
+    pos_checkout_id: posCheckoutId,
+    type: transactionType,
+    total: 750,
+    customer_account_uid: customerID,
+    discounts_applied: discount
+      ? [discount.uid]
+      : []
+  },
+  order: {
+    currency: "USD",
+    pos_order_id: posOrderId,
+    products: [
+      {
+        name: "hamburger",
+        price: 250,
+        price_with_vat: 0,
+        quantity: 2,
+        receipt_nest_level: 1,
+        single_vat_amount: 0,
+        total_price: 500,
+        total_with_vat: 0,
+        vat_rate: 0,
+        vat_amount: 0
+      },
+    ],
+    subtotal: 0,
+    tax: 125
+  }
+})
 
 async function unpackResponse(response: Response): Promise<UnpackedResponse> {
   return [
@@ -49,12 +84,12 @@ export async function httpRequest(
       body: body,
     }))
       .then(unpackResponse)
-      .then(response => logger.logResponse(response));
+      .then(response => logger.logResponse(response))
     clearTimeout(id);
     return response;
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
-      response = [new Response(null, { status: 408 })]
+      response = logger.logResponse([new Response(null, { status: 408, statusText: "Request Timeout" })])
     } else {
       // response = new Response(null, { status: 503 });
       throw err;
@@ -75,7 +110,7 @@ export async function getCustomers(
   // these until the customer object is no longer null
   // Possible status values that will be returned:
   // IDLE | CHECKING_IN | SELECTING_DISCOUNT | AWAITING_PAYMENT | AWAITING_CHECKOUT
-  let [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger,delayInMillis);
+  let [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger, delayInMillis);
 
   if (resp.status == 200) {
     while (returned_json.customer == null) {
@@ -100,7 +135,7 @@ export async function getCustomers(
         return Promise.resolve({ discount: discount, uid: "" });
       }
 
-      [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger,delayInMillis);
+      [resp, returned_json] = await httpRequest("customers", "GET", null, config, logger, delayInMillis);
     }
   } else {
     logger.printOutcome(false, resp);

@@ -9,12 +9,13 @@ import { LogEntry, LogMessage, LogType, OutcomeLog, RequestLog, ResponseLog } fr
 import { UnpackedResponse } from "../types/utils.ts";
 
 export interface ILogger {
+    logResponseError(error: any): void
     log(...data: any[]): void
     logRequest(
         input: URL | Request | string,
         init?: RequestInit): [input: URL | Request | string, init?: RequestInit]
     logResponse(response: UnpackedResponse): UnpackedResponse
-    printOutcome(successful: boolean, reponse: Response): void
+    printOutcome(successful: boolean, response: Response): void
 }
 
 export class ConsoleLogger implements ILogger {
@@ -30,14 +31,18 @@ export class ConsoleLogger implements ILogger {
         return response
     }
 
-    printOutcome(successful = false, reponse: Response) {
+    logResponseError(error: any): void {
+        console.log('Response error: ', error)
+    }
+
+    printOutcome(successful = false, response: Response) {
         console.log(gray("--------------------------------------"));
         console.log(
             successful
                 ? bold(green("Flow Outcome: Success"))
                 : bold(red("Flow Outcome: Failed")),
         );
-        console.log(`Status Code: ${reponse.status}`);
+        console.log(`Status Code: ${response.status}`);
         console.log(gray("--------------------------------------"));
     }
 }
@@ -90,6 +95,15 @@ class ReactStateLogger implements ILogger {
         } as ResponseLog)
         console.log('Logging response: ', response)
         return unpackedResponse
+    }
+
+    logResponseError(error: any): void {
+        this.appendLog({
+            type: LogType.RESPONSE,
+            ok: false,
+            status: NaN,
+            statusText: error
+        } as ResponseLog)
     }
 
     log(...data: any[]): void {

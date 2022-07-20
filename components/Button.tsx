@@ -3,9 +3,11 @@ import { tw } from "@twind";
 import { h } from "preact";
 
 
-export default function Button(props: h.JSX.HTMLAttributes<HTMLButtonElement>) {
+export default function Button(props: h.JSX.HTMLAttributes<HTMLButtonElement> & {additionalClasses?: string}) {
 
-    const btn = tw`px-3 py-2 border(gray-100 1) bg-gray-100 hover:(border border-solid border-gray-400) rounded`
+    const btn = 
+    tw`px-3 py-2 border(gray-100 1) bg-gray-100 hover:(border border-solid border-gray-400) rounded${
+        props.additionalClasses ? ' '+props.additionalClasses : ''}`
     const btnDisabled = tw`${btn} hover:cursor-not-allowed`
 
     return (

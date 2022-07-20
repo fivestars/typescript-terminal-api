@@ -1,7 +1,8 @@
 /** @jsx h */
 import { tw } from "@twind";
-import { Fragment, h } from "preact";
+import { h } from "preact";
 import { useState } from "preact/hooks";
+import Button from "../components/Button.tsx";
 import ConfigurationPage from "../components/ConfigurationPage.tsx";
 import LogEntry from "../components/LogEntry.tsx";
 import RunFlowsPage from "../components/RunFlowsPage.tsx";
@@ -39,11 +40,13 @@ export default function App(props: Props) {
         <RunFlowsPage
           config={config}
           logger={logger}
-          clearLogs={clearLogs}
         />
       )}
-      <div class={`${tw`pt-4`}`}>
-        <h1 class={wellHeader}>Logs</h1>
+      <div class={`${tw`pt-4 relative w-full`}`}>
+        <h1 class={wellHeader}>
+          Logs 
+          <Button onClick={clearLogs} additionalClasses={tw`float-right -translate-y-1/4`}>Clear logs</Button>
+        </h1>
         {logEntries.map(log => <LogEntry log={log} />)}
         {!logEntries.length && 'Logs are empty.'}
       </div>

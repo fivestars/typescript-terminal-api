@@ -42,7 +42,7 @@ export default function LogEntry(props: LogEntryProps) {
     ).join(' ')
 
     const renderOutcome = ({ successful, response }: OutcomeLog) => (
-        `${successful ? 'Success' : 'Failed'} >> Response status: ${response.status}`
+        `${successful ? 'Success' : 'Failed'} >> Response status: ${response.status} ${response.statusText || ''}`
     )
 
     const renderRequest = (log: RequestLog) => (
