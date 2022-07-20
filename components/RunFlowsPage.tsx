@@ -11,6 +11,8 @@ import { ConfigurationSchema } from '../types/config.ts';
 import { COMPLETED_FAILED_TRANSACTION_STATES, COMPLETED_SUCCESS_TRANSACTION_STATES, CreateTransactionResponse, CustomerTerminalStateTypes, Discount, TransactionStatusTypes, TransactionTypes } from "../types/transaction.ts";
 import Modal from "./Modal.tsx";
 import { useEffect } from 'preact/hooks'
+import { useCallback } from 'preact/hooks'
+import { debounce } from "../terminal-api/utils.ts";
 
 interface Props {
   config: ConfigurationSchema
@@ -36,8 +38,14 @@ export default function RunFlowsPage(props: Props) {
 
   const horizontalFlow = tw`flex flex-row gap-4`
 
-  const updateDelayConfig = (evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) =>
-    setDelay(parseInt(evt.currentTarget.value) ?? '')
+  const updateDelayConfig = useCallback(
+    debounce(
+      (evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) =>
+        setDelay(
+          parseInt((evt.target as HTMLInputElement).value) ?? ''
+        ),
+      500
+    ), [])
 
   const onClickTransactionButton = async (evt: h.JSX.TargetedMouseEvent<HTMLButtonElement>) => {
     const transactionName = evt.currentTarget.name
