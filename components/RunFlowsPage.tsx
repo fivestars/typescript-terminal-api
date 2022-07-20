@@ -24,7 +24,7 @@ export default function RunFlowsPage(props: Props) {
   const [currentTransactionName, setCurrentTransactionName] = useState<string>()
   const [currentTransaction, setCurrentTransaction] = useState<CreateTransactionResponse>()
   const [approvedDiscount, setApprovedDiscount] = useState<Discount | null>()
-  const [customerInformation] = useCustomerServiceMonitoring(config, logger)
+  const [customerInformation] = useCustomerServiceMonitoring(delay >= 0 ? delay : 0, config, logger)
   const [isCancellingTransaction, setCancellingTransaction] = useState(false)
   const [transactionStatus] = useTransactionStatusMonitoring(
     currentTransaction?.pos_checkout_id, config, logger, delay)

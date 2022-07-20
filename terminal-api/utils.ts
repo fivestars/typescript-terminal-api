@@ -59,7 +59,8 @@ export async function httpRequest(
   config: ConfigurationSchema,
   logger: ILogger,
   delayInMillis: number,
-  timeout = 120000
+  abortSignal = new AbortController(),
+  timeout = 120000,
 ): Promise<UnpackedResponse> {
   let response: UnpackedResponse;
 
@@ -70,10 +71,9 @@ export async function httpRequest(
       logger.log('Delay has passed, resuming execution')
     }
 
-    const c = new AbortController();
-    const id = setTimeout(() => c.abort(), timeout);
+    const id = setTimeout(() => abortSignal.abort(), timeout);
     response = await fetch(...logger.logRequest(`${config.base_url}${config.terminal_id}/${endpoint}`, {
-      signal: c.signal,
+      signal: abortSignal.signal,
       method: method,
       headers: {
         "Authorization": `Bearer ${config.bearer_token}`,

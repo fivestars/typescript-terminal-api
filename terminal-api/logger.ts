@@ -85,7 +85,6 @@ class ReactStateLogger implements ILogger {
 
     logResponse(unpackedResponse: UnpackedResponse): UnpackedResponse {
         const [response, body] = unpackedResponse
-        console.log('Logging response: ', response, this)
         this.appendLog({
             type: LogType.RESPONSE,
             ok: response.ok,
@@ -93,7 +92,6 @@ class ReactStateLogger implements ILogger {
             statusText: response.statusText,
             body
         } as ResponseLog)
-        console.log('Logging response: ', response)
         return unpackedResponse
     }
 
