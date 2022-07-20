@@ -48,6 +48,8 @@ export function useTransactionStatusMonitoring(
                 }
             }
             timeoutID = setTimeout(getTransactionStatus, 0)
+        } else {
+            setTransactionStatus(undefined)
         }
         return () => {
             cancel = true

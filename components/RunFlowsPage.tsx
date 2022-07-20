@@ -153,7 +153,7 @@ export default function RunFlowsPage(props: Props) {
           )}
           {!!currentTransaction && (
             <div class={tw`${well}`}>
-              <h1 class={wellHeader}>Current transaction information</h1>
+              <h1 class={wellHeader}>Latest transaction information</h1>
               <div>
                 Transaction state: {transactionStatus?.status ?? currentTransaction?.status}
                 <Inspector data={transactionStatus ?? currentTransaction} search={false} />
