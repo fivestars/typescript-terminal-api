@@ -71,6 +71,7 @@ export default function RunFlowsPage(props: Props) {
     const clearTransactionState = () => {
       setCurrentTransaction(undefined)
       setCurrentTransactionName(undefined)
+      setApprovedDiscount(undefined)
     }
 
     const status = transactionStatus?.status
