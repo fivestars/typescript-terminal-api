@@ -71,7 +71,6 @@ export default function RunFlowsPage(props: Props) {
     const clearTransactionState = () => {
       setCurrentTransaction(undefined)
       setCurrentTransactionName(undefined)
-      setApprovedDiscount(undefined)
     }
 
     const status = transactionStatus?.status
@@ -85,6 +84,12 @@ export default function RunFlowsPage(props: Props) {
       }
     }
   }, [transactionStatus])
+
+  useEffect(() => {
+    if(customerInformation?.device?.device_state_title === CustomerTerminalStateTypes.IDLE) {
+      setApprovedDiscount(undefined)
+    }
+  }, [customerInformation])
 
   const configurationInputsDisabled = Boolean(currentTransactionName)
   const transactionButtonsDisabled =
