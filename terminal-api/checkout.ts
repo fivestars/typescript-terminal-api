@@ -22,8 +22,8 @@ export const runTransaction = (
 }
 
 export const cancelTransaction = (
-    posCheckoutId: string, config: ConfigurationSchema, logger: ILogger, delayInMillis: number
-) => httpRequest(`checkouts/${posCheckoutId}/cancel`, "POST", null, config, logger, delayInMillis)
+    posCheckoutId: string | undefined, config: ConfigurationSchema, logger: ILogger, delayInMillis: number
+) => httpRequest(`checkouts${posCheckoutId ? `/${posCheckoutId}` : ''}/cancel`, "POST", null, config, logger, delayInMillis)
 
 export function useTransactionStatusMonitoring(
     posCheckoutId: string | undefined, config: ConfigurationSchema, logger: ILogger,

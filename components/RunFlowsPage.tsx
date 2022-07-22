@@ -62,7 +62,7 @@ export default function RunFlowsPage(props: Props) {
 
   const onClickCancelTransaction = () => {
     setCancellingTransaction(true)
-    cancelTransaction(currentTransaction!.pos_checkout_id, config, logger, delay)
+    cancelTransaction(currentTransaction?.pos_checkout_id, config, logger, delay)
       .finally(() => setCancellingTransaction(false))
   }
 
@@ -95,7 +95,7 @@ export default function RunFlowsPage(props: Props) {
   const transactionButtonsDisabled =
     Boolean(currentTransactionName) || delay < 0 || !customerInformation?.customer ||
     customerInformation?.device?.device_state_title === CustomerTerminalStateTypes.SELECTING_DISCOUNT
-  const cancelTransactionButtonDisabled = !currentTransaction || isCancellingTransaction
+  const cancelTransactionButtonDisabled = isCancellingTransaction
 
   const isModalVisible = Boolean(customerInformation?.customer?.discounts?.length &&
     approvedDiscount === undefined)
