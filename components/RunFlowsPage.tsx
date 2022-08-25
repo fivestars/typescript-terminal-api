@@ -5,6 +5,7 @@ import { useState } from "preact/hooks";
 import Inspector from 'react-json-inspector';
 import Button from '../components/Button.tsx';
 import { cancelTransaction, runTransaction, useTransactionStatusMonitoring } from "../terminal-api/checkout.ts";
+import { refund } from "../terminal-api/refunds.ts";
 import { useCustomerServiceMonitoring } from "../terminal-api/customer.ts";
 import { ILogger } from '../terminal-api/logger.ts';
 import { ConfigurationSchema } from '../types/config.ts';
@@ -23,6 +24,8 @@ interface Props {
 export default function RunFlowsPage(props: Props) {
   const { config, logger } = props
   const [delay, setDelay] = useState(0)
+  const [checkoutReference, setCheckoutReference] = useState<string>("")
+  const [refundAmount, setRefundAmount] = useState<number>(0)
   const [currentTransactionName, setCurrentTransactionName] = useState<string>()
   const [currentTransaction, setCurrentTransaction] = useState<CreateTransactionResponse>()
   const [approvedDiscount, setApprovedDiscount] = useState<Discount | null>()
@@ -47,6 +50,14 @@ export default function RunFlowsPage(props: Props) {
       500
     ), [])
 
+  const onUpdateCheckoutReference = (evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) => {
+    setCheckoutReference(evt.currentTarget.value)
+  }
+
+  const onUpdateRefundAmount = (evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) => {
+    setRefundAmount(parseInt(evt.currentTarget.value))
+  }
+
   const onClickTransactionButton = async (evt: h.JSX.TargetedMouseEvent<HTMLButtonElement>) => {
     const transactionName = evt.currentTarget.name
 
@@ -64,6 +75,17 @@ export default function RunFlowsPage(props: Props) {
     setCancellingTransaction(true)
     cancelTransaction(currentTransaction?.pos_checkout_id, config, logger, delay)
       .finally(() => setCancellingTransaction(false))
+  }
+
+  const onClickRefund = () => {
+    logger.log(`Attempting refund: ${checkoutReference} for $${refundAmount}`)
+
+    refund(checkoutReference, refundAmount, config, logger, delay)
+    .then((value) => {
+        console.log('Refund result >> ', value)
+    }).catch((err) => {
+        console.log(err)
+    })
   }
 
   useEffect(() => {
@@ -152,6 +174,28 @@ export default function RunFlowsPage(props: Props) {
               onClick={onClickCancelTransaction}
             >Cancel</Button>
           </div>
+        </div>
+        <div class={tw`${well} w-1/2`}>
+            <h1 class={wellHeader}>Refunds</h1>
+            <span class={inputSpan}>
+                Checkout Reference ID<input
+                class={input}
+                type="string"
+                onInput={onUpdateCheckoutReference}
+                />
+            </span>
+            <span class={inputSpan}>
+                Refund Amount<input
+                class={input}
+                type="number"
+                onInput={onUpdateRefundAmount}
+                />
+            </span>
+            <div class={tw`pt-4 w-full text-center`}>
+                <Button
+                onClick={onClickRefund}
+                >Refund</Button>
+            </div>
         </div>
       </div>
       {Boolean(customerInformation || currentTransaction || transactionStatus) && (
