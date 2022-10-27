@@ -25,6 +25,9 @@ export const cancelTransaction = (
     posCheckoutId: string | undefined, config: ConfigurationSchema, logger: ILogger, delayInMillis: number
 ) => httpRequest(`checkouts${posCheckoutId ? `/${posCheckoutId}` : ''}/cancel`, "POST", null, config, logger, delayInMillis)
 
+export const switchtoCashTransaction = (config: ConfigurationSchema, logger: ILogger, delayInMillis: number
+) => httpRequest('checkouts', "PUT", '{"checkout": {"type": "CASH"}}', config, logger, delayInMillis)
+
 export function useTransactionStatusMonitoring(
     posCheckoutId: string | undefined, config: ConfigurationSchema, logger: ILogger,
     delayInMillis: number

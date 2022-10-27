@@ -4,12 +4,12 @@ import { h } from "preact";
 import { useState } from "preact/hooks";
 import Inspector from 'react-json-inspector';
 import Button from '../components/Button.tsx';
-import { cancelTransaction, runTransaction, useTransactionStatusMonitoring } from "../terminal-api/checkout.ts";
+import { cancelTransaction, switchtoCashTransaction, runTransaction, useTransactionStatusMonitoring } from "../terminal-api/checkout.ts";
 import { refund } from "../terminal-api/refunds.ts";
 import { useCustomerServiceMonitoring } from "../terminal-api/customer.ts";
 import { ILogger } from '../terminal-api/logger.ts';
 import { ConfigurationSchema } from '../types/config.ts';
-import { COMPLETED_FAILED_TRANSACTION_STATES, COMPLETED_SUCCESS_TRANSACTION_STATES, CreateTransactionResponse, CustomerTerminalStateTypes, Discount, TransactionStatusTypes, TransactionTypes } from "../types/transaction.ts";
+import { COMPLETED_FAILED_TRANSACTION_STATES, COMPLETED_SUCCESS_TRANSACTION_STATES, CreateTransactionResponse, CustomerInformation, CustomerTerminalStateTypes, Discount, TransactionStatusTypes, TransactionTypes } from "../types/transaction.ts";
 import Modal from "./Modal.tsx";
 import { useEffect } from 'preact/hooks'
 import { useCallback } from 'preact/hooks'
@@ -33,6 +33,7 @@ export default function RunFlowsPage(props: Props) {
   const [isCancellingTransaction, setCancellingTransaction] = useState(false)
   const [transactionStatus] = useTransactionStatusMonitoring(
     currentTransaction?.pos_checkout_id, config, logger, delay)
+  const [selectedDiscount, setSelectedDiscount] = useState<Discount | null>()
 
   const well = tw`bg-gray-200 w-full p-5 rounded mb-2`
   const inputSpan = tw`text-center flex flex-col flex-grow-0 w-full`
@@ -77,6 +78,11 @@ export default function RunFlowsPage(props: Props) {
       .finally(() => setCancellingTransaction(false))
   }
 
+  const onClickSwitchToCashTransaction = () => {
+    switchtoCashTransaction(config, logger, delay)
+      .finally(() => console.log('Switched transaction to >> cash'))
+  }
+
   const onClickRefund = () => {
     logger.log(`Attempting refund: ${checkoutReference} for $${refundAmount}`)
 
@@ -86,6 +92,17 @@ export default function RunFlowsPage(props: Props) {
     }).catch((err) => {
         console.log(err)
     })
+  }
+
+  const isDiscountSelected = (customerInformation?: CustomerInformation): boolean => {
+    if(!customerInformation?.customer) return false;
+    for (const item of customerInformation.customer.discounts) {
+        if (item.selected) {
+            setSelectedDiscount(item);
+            return true;
+        }
+    }
+    return false;
   }
 
   useEffect(() => {
@@ -119,8 +136,7 @@ export default function RunFlowsPage(props: Props) {
     customerInformation?.device?.device_state_title === CustomerTerminalStateTypes.SELECTING_DISCOUNT
   const cancelTransactionButtonDisabled = isCancellingTransaction
 
-  const isModalVisible = Boolean(customerInformation?.customer?.discounts?.length &&
-    approvedDiscount === undefined)
+  const isModalVisible = Boolean(isDiscountSelected(customerInformation) && approvedDiscount === undefined)
 
   return (
     <div>
@@ -174,6 +190,13 @@ export default function RunFlowsPage(props: Props) {
               onClick={onClickCancelTransaction}
             >Cancel</Button>
           </div>
+          <div class={tw`flex gap-2 w-full justify-center pt-3`}>
+            <Button
+              disabled={cancelTransactionButtonDisabled}
+              name="switchToCash"
+              onClick={onClickSwitchToCashTransaction}
+            >Switch to Cash</Button>
+          </div>
         </div>
         <div class={tw`${well} w-1/2`}>
             <h1 class={wellHeader}>Refunds</h1>
@@ -223,11 +246,13 @@ export default function RunFlowsPage(props: Props) {
       {isModalVisible && (
         <Modal>
           <div>The customer has selected a discount</div>
-          <div>ID: {customerInformation?.customer?.discounts[0].uid}</div>
-          <div>Type: {customerInformation?.customer?.discounts[0].type}</div>
+          <div>Name: {selectedDiscount?.name}</div>
+          <div>Point Cost: {selectedDiscount?.point_cost}</div>
+          <div>ID: {selectedDiscount?.uid}</div>
+          <div>Type: {selectedDiscount?.type}</div>
 
           <div class={tw`mt-5 flex justify-center gap-10`}>
-            <Button onClick={() => setApprovedDiscount(customerInformation?.customer?.discounts[0])}>
+            <Button onClick={() => setApprovedDiscount(selectedDiscount)}>
               Accept
             </Button>
             <Button onClick={() => setApprovedDiscount(null)}>
