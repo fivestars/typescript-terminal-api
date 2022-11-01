@@ -80,6 +80,7 @@ export async function httpRequest(
         "pos-id": `${config.pos_id}`,
         "Content-Type": "application/json",
         "Accept": "application/json",
+        "software-id": `${config.software_id}`,
       },
       body: body,
     }))
