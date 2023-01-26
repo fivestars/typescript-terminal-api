@@ -2,7 +2,7 @@ import { ConfigurationSchema } from '../types/config.ts'
 
 export function validateConfig(config: ConfigurationSchema) {
     let valid = true;
-    valid &&= Boolean(config.bearer_token)
+    valid &&= Boolean(config.basic_token)
     valid &&= Boolean(config.software_id)
     valid &&= Boolean(config.pos_id)
     valid &&= Boolean(config.base_url)

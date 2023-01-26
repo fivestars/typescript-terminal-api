@@ -1,3 +1,4 @@
+import { encode } from "https://deno.land/std/encoding/base64.ts"
 import { ConfigurationSchema } from '../types/config.ts';
 import {
   CustomerTerminalStateTypes, CustomerUidAndDiscount, Discount, TransactionCancelStateTypes, TransactionTypes
@@ -76,11 +77,11 @@ export async function httpRequest(
       signal: abortSignal.signal,
       method: method,
       headers: {
-        "Authorization": `Bearer ${config.bearer_token}`,
+        "Authorization": `Basic ${encode(config.basic_token)}`,
         "pos-id": `${config.pos_id}`,
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "software-id": `${config.software_id}`,
+        "fivestars-software-id": `${config.software_id}`,
       },
       body: body,
     }))

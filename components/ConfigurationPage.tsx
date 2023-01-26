@@ -59,8 +59,8 @@ export default function ConfigurationPage(props: Props) {
             class={input}
             disabled={configurationInputsDisabled}
             type="text"
-            name="bearer_token"
-            value={config.bearer_token}
+            name="basic_token"
+            value={config.basic_token}
             onInput={onUpdateConfigValue} />
         </span>
 
