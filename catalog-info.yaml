@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: typescript-terminal-api
+  annotations:
+    github.com/project-slug: fivestars/typescript-terminal-api
+spec:
+  type: other
+  lifecycle: unknown
+  owner: fivestars
