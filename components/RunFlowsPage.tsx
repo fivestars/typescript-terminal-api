@@ -34,6 +34,10 @@ export default function RunFlowsPage(props: Props) {
   const [transactionStatus] = useTransactionStatusMonitoring(
     currentTransaction?.pos_checkout_id, config, logger, delay)
   const [selectedDiscount, setSelectedDiscount] = useState<Discount | null>()
+  const [overridenDiscount, setOverrideDiscount] = useState<Discount | null>()
+  const [skipTip, setSkipTip] = useState<boolean>(false)
+  const [skipRewardNotification, setSkipRewardNotification] = useState<boolean>(false)
+  const [attemptOverrideDiscount, setAttemptOverrideDiscount] = useState<boolean>(false)
 
   const well = tw`bg-gray-200 w-full p-5 rounded mb-2`
   const inputSpan = tw`text-center flex flex-col flex-grow-0 w-full`
@@ -67,7 +71,15 @@ export default function RunFlowsPage(props: Props) {
 
     const transactionType = Object.values(TransactionTypes)[Object.keys(TransactionTypes).indexOf(transactionName)]
     const [response, json] = await runTransaction(
-      transactionType, customerInformation!.customer.uid, approvedDiscount as Discount | null, config, logger, delay)
+      transactionType,
+       customerInformation!.customer.uid,
+       (attemptOverrideDiscount ? overridenDiscount  as Discount | null : approvedDiscount as Discount | null),
+       config,
+       logger,
+       delay,
+       skipTip,
+       skipRewardNotification
+    )
     console.log('Create transaction >> ', response, json)
     setCurrentTransaction(json)
   }
@@ -96,6 +108,7 @@ export default function RunFlowsPage(props: Props) {
 
   const isDiscountSelected = (customerInformation?: CustomerInformation): boolean => {
     if(!customerInformation?.customer) return false;
+    setPossibleOverrideDiscount(customerInformation.customer.discounts);
     for (const item of customerInformation.customer.discounts) {
         if (item.selected) {
             setSelectedDiscount(item);
@@ -105,11 +118,43 @@ export default function RunFlowsPage(props: Props) {
     return false;
   }
 
+  const setPossibleOverrideDiscount = (discounts: Discount[]) => {
+    for (const item of discounts) {
+        if (!item.selected) {
+            setOverrideDiscount(item);
+            return;
+        }
+    }
+  }
+
+  const onChangeCheckboxHandler = (command: string, evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) => {
+    switch(command) {
+        case 'skipTip': {
+            setSkipTip((prev) => !prev)
+            logger.log(`${command} will not be shown`);
+            break;
+        }
+        case 'skipRewardNotification': {
+            setSkipRewardNotification((prev) => !prev)
+            logger.log(`${command} will not be shown`);
+            break;
+        }
+        case 'attemptOverrideDiscount': {
+            setAttemptOverrideDiscount((prev) => !prev)
+            logger.log(`If possible - overriding discount/reward`);
+            break;
+        }
+    }
+  }
+
   useEffect(() => {
     // monitor transaction status, update state and print outcome
     const clearTransactionState = () => {
       setCurrentTransaction(undefined)
       setCurrentTransactionName(undefined)
+      setSkipTip(false)
+      setSkipRewardNotification(false)
+      setAttemptOverrideDiscount(false)
     }
 
     const status = transactionStatus?.status
@@ -127,6 +172,7 @@ export default function RunFlowsPage(props: Props) {
   useEffect(() => {
     if(customerInformation?.device?.device_state_title === CustomerTerminalStateTypes.IDLE) {
       setApprovedDiscount(undefined)
+      setOverrideDiscount(undefined)
     }
   }, [customerInformation])
 
@@ -189,13 +235,56 @@ export default function RunFlowsPage(props: Props) {
               name="cancel"
               onClick={onClickCancelTransaction}
             >Cancel</Button>
-          </div>
-          <div class={tw`flex gap-2 w-full justify-center pt-3`}>
             <Button
               disabled={cancelTransactionButtonDisabled}
               name="switchToCash"
               onClick={onClickSwitchToCashTransaction}
             >Switch to Cash</Button>
+          </div>
+          <div class={tw`flex gap-2 w-full justify-left pt-1`}>
+            <input
+                name="skipTipCheckbox"
+                type="checkbox"
+                defaultChecked={skipTip}
+                checked={skipTip}
+                id="skipTipCheckbox"
+                onChange={(e) => { onChangeCheckboxHandler('skipTip', e) }}
+            />
+            <label
+                class="inline-block pl-[0.15rem] hover:cursor-pointer"
+                for="skipTipCheckbox">
+                    Skip Tip Screen
+            </label>
+          </div>
+          <div class={tw`flex gap-2 w-full justify-left pt-1`}>
+            <input
+                name="skipRewardNotifcationCheckbox"
+                type="checkbox"
+                defaultChecked={skipRewardNotification}
+                checked={skipRewardNotification}
+                id="skipRewardNotifcationCheckbox"
+                onChange={(e) => { onChangeCheckboxHandler('skipRewardNotification', e) }}
+            />
+            <label
+                class="inline-block pl-[0.15rem] hover:cursor-pointer"
+                for="skipRewardNotifcationCheckbox">
+                    Skip Reward Notfication Screen
+            </label>
+          </div>
+          <div class={tw`flex gap-2 w-full justify-left pt-1`}>
+            <input
+                name="attemptOverrideDiscountCheckbox"
+                type="checkbox"
+                defaultChecked={attemptOverrideDiscount}
+                checked={attemptOverrideDiscount}
+                id="attemptOverrideDiscountCheckbox"
+                onChange={(e) => { onChangeCheckboxHandler('attemptOverrideDiscount', e) }}
+            />
+            <label
+                class="inline-block pl-[0.15rem] hover:cursor-pointer"
+                for="attemptOverrideDiscountCheckbox">
+                    Override Discount (if possible)
+            </label>
           </div>
         </div>
         <div class={tw`${well} w-1/2`}>

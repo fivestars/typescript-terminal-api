@@ -8,13 +8,22 @@ import { createSampleCheckoutData, generateIds, httpRequest } from "./utils.ts";
 
 export const runTransaction = (
     transactionType: TransactionTypes, customerID: string, discount: Discount | null, config: ConfigurationSchema,
-    logger: ILogger, delayInMillis: number
+    logger: ILogger, delayInMillis: number, skipTip: boolean, skipRewardNotification: boolean
 ) => {
     const [posCheckoutId, posOrderId] = generateIds();
     return httpRequest(
         "checkouts",
         "POST",
-        JSON.stringify(createSampleCheckoutData(posCheckoutId, posOrderId, transactionType, customerID, discount)),
+        JSON.stringify(createSampleCheckoutData(
+            posCheckoutId,
+            posOrderId,
+            transactionType,
+            customerID,
+            discount,
+            skipTip,
+            skipRewardNotification
+            )
+        ),
         config,
         logger,
         delayInMillis
