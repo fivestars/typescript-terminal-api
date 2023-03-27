@@ -13,7 +13,7 @@ export function generateIds(): [string, string] {
 
 export const createSampleCheckoutData = (
   posCheckoutId: string, posOrderId: string, transactionType: TransactionTypes, customerID: string,
-  discount: Discount | null
+  discount: Discount | null, skipTip: boolean, skipRewardNotification: boolean
 ) => ({
   checkout: {
     pos_checkout_id: posCheckoutId,
@@ -22,7 +22,10 @@ export const createSampleCheckoutData = (
     customer_account_uid: customerID,
     discounts_applied: discount
       ? [discount.uid]
-      : []
+      : [],
+    skip_tip: skipTip,
+    skip_reward_notification: skipRewardNotification,
+    skip_signin: false,
   },
   order: {
     currency: "USD",
