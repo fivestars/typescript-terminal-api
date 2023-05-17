@@ -37,6 +37,9 @@ export const cancelTransaction = (
 export const switchtoCashTransaction = (config: ConfigurationSchema, logger: ILogger, delayInMillis: number
 ) => httpRequest('checkouts', "PUT", '{"checkout": {"type": "CASH"}}', config, logger, delayInMillis)
 
+export const skipCurrentScreen = (config: ConfigurationSchema, logger: ILogger, delayInMillis: number
+    ) => httpRequest('actions', "POST", '{"action": "pay_skip_user_action"}', config, logger, delayInMillis)
+
 export function useTransactionStatusMonitoring(
     posCheckoutId: string | undefined, config: ConfigurationSchema, logger: ILogger,
     delayInMillis: number
