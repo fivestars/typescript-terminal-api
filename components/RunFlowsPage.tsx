@@ -4,7 +4,15 @@ import { h } from "preact";
 import { useState } from "preact/hooks";
 import Inspector from 'react-json-inspector';
 import Button from '../components/Button.tsx';
-import { cancelTransaction, skipCurrentScreen, switchtoCashTransaction, runTransaction, useTransactionStatusMonitoring } from "../terminal-api/checkout.ts";
+import {
+    cancelTransaction,
+    skipCurrentScreen,
+    switchtoCashTransaction,
+    runTransaction,
+    useTransactionStatusMonitoring,
+    turnOnScreensaver,
+    turnOffScreensaver,
+} from "../terminal-api/checkout.ts";
 import { refund } from "../terminal-api/refunds.ts";
 import { useCustomerServiceMonitoring } from "../terminal-api/customer.ts";
 import { ILogger } from '../terminal-api/logger.ts';
@@ -98,6 +106,16 @@ export default function RunFlowsPage(props: Props) {
   const onClickSkipCurrentScreen = () => {
     skipCurrentScreen(config, logger, delay)
       .finally(() => console.log('Attempting to skip current screen'))
+  }
+
+  const onClickTurnOnScreensaver = () => {
+    turnOnScreensaver(config, logger, delay)
+      .finally(() => console.log('Attempting to activate screensaver on customer terminal'))
+  }
+
+  const onClickTurnOffScreensaver = () => {
+    turnOffScreensaver(config, logger, delay)
+      .finally(() => console.log('Attempting to deactivate screensaver on customer terminal'))
   }
 
   const onClickRefund = () => {
@@ -251,6 +269,16 @@ export default function RunFlowsPage(props: Props) {
               name="skipScreen"
               onClick={onClickSkipCurrentScreen}
             >Skip Current Screen</Button>
+          </div>
+          <div class={tw`flex gap-2 w-full justify-center pt-3`}>
+            <Button
+              name="turnOnScreensaver"
+              onClick={onClickTurnOnScreensaver}
+            >Turn ON screensaver</Button>
+            <Button
+              name="turnOffScreensaver"
+              onClick={onClickTurnOffScreensaver}
+            >Turn OFF screensaver</Button>
           </div>
           <div class={tw`flex gap-2 w-full justify-left pt-1`}>
             <input
