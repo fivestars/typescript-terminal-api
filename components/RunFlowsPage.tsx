@@ -10,8 +10,7 @@ import {
     switchtoCashTransaction,
     runTransaction,
     useTransactionStatusMonitoring,
-    turnOnScreensaver,
-    turnOffScreensaver,
+    toggleScreensaver,
 } from "../terminal-api/checkout.ts";
 import { refund } from "../terminal-api/refunds.ts";
 import { useCustomerServiceMonitoring } from "../terminal-api/customer.ts";
@@ -44,6 +43,7 @@ export default function RunFlowsPage(props: Props) {
   const [selectedDiscount, setSelectedDiscount] = useState<Discount | null>()
   const [overridenDiscount, setOverrideDiscount] = useState<Discount | null>()
   const [skipTip, setSkipTip] = useState<boolean>(false)
+  const [screensaver, setScreensaver] = useState<boolean>(false)
   const [skipRewardNotification, setSkipRewardNotification] = useState<boolean>(false)
   const [attemptOverrideDiscount, setAttemptOverrideDiscount] = useState<boolean>(false)
 
@@ -108,16 +108,6 @@ export default function RunFlowsPage(props: Props) {
       .finally(() => console.log('Attempting to skip current screen'))
   }
 
-  const onClickTurnOnScreensaver = () => {
-    turnOnScreensaver(config, logger, delay)
-      .finally(() => console.log('Attempting to activate screensaver on customer terminal'))
-  }
-
-  const onClickTurnOffScreensaver = () => {
-    turnOffScreensaver(config, logger, delay)
-      .finally(() => console.log('Attempting to deactivate screensaver on customer terminal'))
-  }
-
   const onClickRefund = () => {
     logger.log(`Attempting refund: ${checkoutReference} for $${refundAmount}`)
 
@@ -152,6 +142,15 @@ export default function RunFlowsPage(props: Props) {
 
   const onChangeCheckboxHandler = (command: string, evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) => {
     switch(command) {
+        case 'screensaver': {
+            setScreensaver((prev) => {
+                const newValue = !prev;
+                toggleScreensaver(newValue, config, logger, delay)
+                  .finally(() => console.log('Attempting to toggle screensaver on customer terminal'));
+                return newValue;
+            });
+            break;
+        }
         case 'skipTip': {
             setSkipTip((prev) => !prev)
             logger.log(`${command} will not be shown`);
@@ -270,29 +269,19 @@ export default function RunFlowsPage(props: Props) {
               onClick={onClickSkipCurrentScreen}
             >Skip Current Screen</Button>
           </div>
-          <div class={tw`flex gap-2 w-full justify-center pt-3`}>
-            <Button
-              name="turnOnScreensaver"
-              onClick={onClickTurnOnScreensaver}
-            >Turn ON screensaver</Button>
-            <Button
-              name="turnOffScreensaver"
-              onClick={onClickTurnOffScreensaver}
-            >Turn OFF screensaver</Button>
-          </div>
           <div class={tw`flex gap-2 w-full justify-left pt-1`}>
             <input
-                name="skipTipCheckbox"
-                type="checkbox"
-                defaultChecked={skipTip}
-                checked={skipTip}
-                id="skipTipCheckbox"
-                onChange={(e) => { onChangeCheckboxHandler('skipTip', e) }}
+              name="toggleScreensaver"
+              type="checkbox"
+              defaultChecked={screensaver}
+              checked={screensaver}
+              id="screensaverCheckbox"
+              onChange={(e) => { onChangeCheckboxHandler('screensaver', e) }}
             />
             <label
-                class="inline-block pl-[0.15rem] hover:cursor-pointer"
-                for="skipTipCheckbox">
-                    Skip Tip Screen
+              class="inline-block pl-[0.15rem] hover:cursor-pointer"
+              for="screensaverCheckbox">
+                  Toggle screensaver
             </label>
           </div>
           <div class={tw`flex gap-2 w-full justify-left pt-1`}>
