@@ -286,6 +286,21 @@ export default function RunFlowsPage(props: Props) {
           </div>
           <div class={tw`flex gap-2 w-full justify-left pt-1`}>
             <input
+                name="skipTipCheckbox"
+                type="checkbox"
+                defaultChecked={skipTip}
+                checked={skipTip}
+                id="skipTipCheckbox"
+                onChange={(e) => { onChangeCheckboxHandler('skipTip', e) }}
+            />
+            <label
+                class="inline-block pl-[0.15rem] hover:cursor-pointer"
+                for="skipTipCheckbox">
+                    Skip Tip Screen
+            </label>
+          </div>
+          <div class={tw`flex gap-2 w-full justify-left pt-1`}>
+            <input
                 name="skipRewardNotifcationCheckbox"
                 type="checkbox"
                 defaultChecked={skipRewardNotification}
