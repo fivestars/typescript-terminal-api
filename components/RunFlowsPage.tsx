@@ -4,7 +4,14 @@ import { h } from "preact";
 import { useState } from "preact/hooks";
 import Inspector from 'react-json-inspector';
 import Button from '../components/Button.tsx';
-import { cancelTransaction, skipCurrentScreen, switchtoCashTransaction, runTransaction, useTransactionStatusMonitoring } from "../terminal-api/checkout.ts";
+import {
+    cancelTransaction,
+    skipCurrentScreen,
+    switchtoCashTransaction,
+    runTransaction,
+    useTransactionStatusMonitoring,
+    toggleScreensaver,
+} from "../terminal-api/checkout.ts";
 import { refund } from "../terminal-api/refunds.ts";
 import { useCustomerServiceMonitoring } from "../terminal-api/customer.ts";
 import { ILogger } from '../terminal-api/logger.ts';
@@ -36,6 +43,7 @@ export default function RunFlowsPage(props: Props) {
   const [selectedDiscount, setSelectedDiscount] = useState<Discount | null>()
   const [overridenDiscount, setOverrideDiscount] = useState<Discount | null>()
   const [skipTip, setSkipTip] = useState<boolean>(false)
+  const [screensaver, setScreensaver] = useState<boolean>(false)
   const [skipRewardNotification, setSkipRewardNotification] = useState<boolean>(false)
   const [attemptOverrideDiscount, setAttemptOverrideDiscount] = useState<boolean>(false)
 
@@ -134,6 +142,15 @@ export default function RunFlowsPage(props: Props) {
 
   const onChangeCheckboxHandler = (command: string, evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) => {
     switch(command) {
+        case 'screensaver': {
+            setScreensaver((prev) => {
+                const newValue = !prev;
+                toggleScreensaver(newValue, config, logger, delay)
+                  .finally(() => console.log('Attempting to toggle screensaver on customer terminal'));
+                return newValue;
+            });
+            break;
+        }
         case 'skipTip': {
             setSkipTip((prev) => !prev)
             logger.log(`${command} will not be shown`);
@@ -251,6 +268,21 @@ export default function RunFlowsPage(props: Props) {
               name="skipScreen"
               onClick={onClickSkipCurrentScreen}
             >Skip Current Screen</Button>
+          </div>
+          <div class={tw`flex gap-2 w-full justify-left pt-1`}>
+            <input
+              name="toggleScreensaver"
+              type="checkbox"
+              defaultChecked={screensaver}
+              checked={screensaver}
+              id="screensaverCheckbox"
+              onChange={(e) => { onChangeCheckboxHandler('screensaver', e) }}
+            />
+            <label
+              class="inline-block pl-[0.15rem] hover:cursor-pointer"
+              for="screensaverCheckbox">
+                  Toggle screensaver
+            </label>
           </div>
           <div class={tw`flex gap-2 w-full justify-left pt-1`}>
             <input

@@ -40,6 +40,9 @@ export const switchtoCashTransaction = (config: ConfigurationSchema, logger: ILo
 export const skipCurrentScreen = (config: ConfigurationSchema, logger: ILogger, delayInMillis: number
     ) => httpRequest('actions', "POST", '{"action": "pay_skip_user_action"}', config, logger, delayInMillis)
 
+export const toggleScreensaver = (screensaver: boolean, config: ConfigurationSchema, logger: ILogger, delayInMillis: number
+    ) => httpRequest('actions', "POST", `{"action": "toggle_screensaver", "data": {"screensaver_enabled": ${screensaver}}}`, config, logger, delayInMillis)
+
 export function useTransactionStatusMonitoring(
     posCheckoutId: string | undefined, config: ConfigurationSchema, logger: ILogger,
     delayInMillis: number
