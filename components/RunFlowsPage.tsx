@@ -11,6 +11,7 @@ import {
     runTransaction,
     useTransactionStatusMonitoring,
     toggleScreensaver,
+    getState
 } from "../terminal-api/checkout.ts";
 import { refund } from "../terminal-api/refunds.ts";
 import { useCustomerServiceMonitoring } from "../terminal-api/customer.ts";
@@ -106,6 +107,11 @@ export default function RunFlowsPage(props: Props) {
   const onClickSkipCurrentScreen = () => {
     skipCurrentScreen(config, logger, delay)
       .finally(() => console.log('Attempting to skip current screen'))
+  }
+
+  const onClickGetState = () => {
+    getState(config, logger, delay)
+      .finally(() => console.log('Attempting to get state'))
   }
 
   const onClickRefund = () => {
@@ -268,6 +274,12 @@ export default function RunFlowsPage(props: Props) {
               name="skipScreen"
               onClick={onClickSkipCurrentScreen}
             >Skip Current Screen</Button>
+          </div>
+          <div class={tw`flex gap-2 w-full justify-center pt-3`}>
+            <Button
+              name="getState"
+              onClick={onClickGetState}
+            >Get State</Button>
           </div>
           <div class={tw`flex gap-2 w-full justify-left pt-1`}>
             <input
