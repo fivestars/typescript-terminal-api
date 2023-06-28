@@ -82,7 +82,6 @@ export async function httpRequest(
       headers: {
         "Authorization": `Basic ${encode(config.basic_token)}`,
         "pos-id": `${config.pos_id}`,
-        "User-agent": "TapiDenoSampleClient",
         "Content-Type": "application/json",
         "Accept": "application/json",
         "fivestars-software-id": `${config.software_id}`,
