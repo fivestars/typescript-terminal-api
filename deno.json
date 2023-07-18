@@ -1,6 +1,7 @@
 {
   "tasks": {
     "start": "deno run -A --watch=static/,routes/ dev.ts",
+    "start-reload": "deno run -A -r --watch=static/,routes/ dev.ts",
     "browser": "google-chrome --args --user-data-dir='/tmp/chrome_dev_test' --disable-web-security --no-sandbox --headless",
     "browser-mac": "open -n -a /Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --args --user-data-dir='/tmp/chrome_dev_test' --disable-web-security",
     "tx-ping": "deno run --allow-read --allow-env --allow-net scripts/ping.ts",
