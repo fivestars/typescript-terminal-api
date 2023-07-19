@@ -5,7 +5,7 @@ import {
     LogEntry as LogEntryType, LogType, LogMessage, OutcomeLog, RequestLog, ResponseLog
 } from '../types/logger.ts'
 // https://github.com/denoland/fresh/issues/411#issuecomment-1177462538
-import Inspector from 'react-json-inspector'
+import ObjectJsonViewer from "./ObjectJsonViewer.tsx";
 
 interface LogEntryProps {
     log: LogEntryType
@@ -37,7 +37,7 @@ export default function LogEntry(props: LogEntryProps) {
 
     const renderMessage = (log: LogMessage) => log.data.map(d =>
         typeof d === "object"
-            ? <Inspector data={d} search={false} />
+            ? <ObjectJsonViewer data={d}/>
             : d
     ).join(' ')
 
@@ -51,7 +51,8 @@ export default function LogEntry(props: LogEntryProps) {
                 <span class={box}>{log.method}</span>
             </div>
             <div class={logField}>{log.url}</div>
-            {log.body && <Inspector data={log.body} search={false} />}
+            
+            {log.body && <ObjectJsonViewer data={log.body}/>}
         </Fragment>
     )
 
@@ -62,7 +63,7 @@ export default function LogEntry(props: LogEntryProps) {
             </div>
             <div class={logField}>
                 {log.body && (
-                    <Inspector data={log.body} search={false} />
+                    <ObjectJsonViewer data={log.body}/>
                 )}
             </div>
         </Fragment>
