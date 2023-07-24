@@ -2,7 +2,6 @@
 import { tw } from "@twind";
 import { h } from "preact";
 import { useState } from "preact/hooks";
-import Inspector from 'react-json-inspector';
 import Button from '../components/Button.tsx';
 import {
     cancelTransaction,
@@ -22,12 +21,12 @@ import Modal from "./Modal.tsx";
 import { useEffect } from 'preact/hooks'
 import { useCallback } from 'preact/hooks'
 import { debounce } from "../terminal-api/utils.ts";
+import ObjectJsonViewer from "./ObjectJsonViewer.tsx";
 
 interface Props {
   config: ConfigurationSchema
   logger: ILogger
 }
-
 
 export default function RunFlowsPage(props: Props) {
   const { config, logger } = props
@@ -372,7 +371,7 @@ export default function RunFlowsPage(props: Props) {
               <h1 class={wellHeader}>Latest customer endpoint information</h1>
               <div>
                 Device state: {customerInformation.device.device_state_title}
-                <Inspector data={customerInformation} search={false} />
+                <ObjectJsonViewer data={customerInformation}/>
               </div>
             </div>
           )}
@@ -381,7 +380,7 @@ export default function RunFlowsPage(props: Props) {
               <h1 class={wellHeader}>Latest transaction information</h1>
               <div>
                 Transaction state: {transactionStatus?.status ?? currentTransaction?.status}
-                <Inspector data={transactionStatus ?? currentTransaction} search={false} />
+                <ObjectJsonViewer data={transactionStatus ?? currentTransaction} />
               </div>
             </div>
           )}

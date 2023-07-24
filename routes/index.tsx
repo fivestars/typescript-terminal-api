@@ -10,7 +10,7 @@ export default function Home() {
   return (
     <div class={tw`p-4 mx-auto max-w-screen-lg`}>
       <Head>
-        <link rel="stylesheet" href="https://lapple.github.io/react-json-inspector/json-inspector.css" />
+        <link rel="stylesheet" href="https://esm.sh/react-json-view-lite/dist/index.css" />
       </Head>
       <App defaultConfig={defaultConfig} />
     </div>
