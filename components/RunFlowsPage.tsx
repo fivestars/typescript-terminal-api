@@ -435,7 +435,7 @@ export default function RunFlowsPage(props: Props) {
           </table>
 
           <div class={tw`mt-5 flex justify-center gap-10`}>
-            <Button onClick={onOverrideDiscount}>
+            <Button onClick={onOverrideDiscount} disabled={!overridenDiscount}>
               Accept
             </Button>
             <Button onClick={() => setIsOverrideDiscountModalVisible(false)}>
