@@ -41,11 +41,12 @@ export default function RunFlowsPage(props: Props) {
   const [transactionStatus] = useTransactionStatusMonitoring(
     currentTransaction?.pos_checkout_id, config, logger, delay)
   const [selectedDiscount, setSelectedDiscount] = useState<Discount | null>()
-  const [overridenDiscount, setOverrideDiscount] = useState<Discount | null>()
+  const [overridenDiscount, setOverridenDiscount] = useState<Discount | null>()
   const [skipTip, setSkipTip] = useState<boolean>(false)
   const [screensaver, setScreensaver] = useState<boolean>(false)
   const [skipRewardNotification, setSkipRewardNotification] = useState<boolean>(false)
   const [attemptOverrideDiscount, setAttemptOverrideDiscount] = useState<boolean>(false)
+  const [isOverrideDiscountModalVisible, setIsOverrideDiscountModalVisible] = useState<boolean>(false)
 
   const well = tw`bg-gray-200 w-full p-5 rounded mb-2`
   const inputSpan = tw`text-center flex flex-col flex-grow-0 w-full`
@@ -126,7 +127,6 @@ export default function RunFlowsPage(props: Props) {
 
   const isDiscountSelected = (customerInformation?: CustomerInformation): boolean => {
     if(!customerInformation?.customer) return false;
-    setPossibleOverrideDiscount(customerInformation.customer.discounts);
     for (const item of customerInformation.customer.discounts) {
         if (item.selected) {
             setSelectedDiscount(item);
@@ -134,15 +134,6 @@ export default function RunFlowsPage(props: Props) {
         }
     }
     return false;
-  }
-
-  const setPossibleOverrideDiscount = (discounts: Discount[]) => {
-    for (const item of discounts) {
-        if (!item.selected) {
-            setOverrideDiscount(item);
-            return;
-        }
-    }
   }
 
   const onChangeCheckboxHandler = (command: string, evt: h.JSX.TargetedEvent<HTMLInputElement, Event>) => {
@@ -166,12 +157,24 @@ export default function RunFlowsPage(props: Props) {
             logger.log(`${command} will not be shown`);
             break;
         }
-        case 'attemptOverrideDiscount': {
-            setAttemptOverrideDiscount((prev) => !prev)
-            logger.log(`If possible - overriding discount/reward`);
-            break;
-        }
     }
+  }
+
+  const onChangeRadioButtonHandler = (
+    discount: Discount
+  ) => {
+    setOverridenDiscount(discount);
+  };
+
+  const onOverrideDiscount = () => {
+    setAttemptOverrideDiscount(true);
+    setIsOverrideDiscountModalVisible(false);
+  }
+
+  const onRemoveDiscount = () => {
+    setAttemptOverrideDiscount(true);
+    setOverridenDiscount(undefined);
+    setIsOverrideDiscountModalVisible(false);
   }
 
   useEffect(() => {
@@ -199,7 +202,7 @@ export default function RunFlowsPage(props: Props) {
   useEffect(() => {
     if(customerInformation?.device?.device_state_title === CustomerTerminalStateTypes.IDLE) {
       setApprovedDiscount(undefined)
-      setOverrideDiscount(undefined)
+      setOverridenDiscount(undefined)
     }
   }, [customerInformation])
 
@@ -209,7 +212,7 @@ export default function RunFlowsPage(props: Props) {
     customerInformation?.device?.device_state_title === CustomerTerminalStateTypes.SELECTING_DISCOUNT
   const cancelTransactionButtonDisabled = isCancellingTransaction
 
-  const isModalVisible = Boolean(isDiscountSelected(customerInformation) && approvedDiscount === undefined)
+  const isDiscountModalVisible = Boolean(isDiscountSelected(customerInformation) && approvedDiscount === undefined)
 
   return (
     <div>
@@ -279,6 +282,11 @@ export default function RunFlowsPage(props: Props) {
               name="getState"
               onClick={onClickGetState}
             >Get State</Button>
+            <Button
+              disabled={!customerInformation?.customer}
+              name="overrideDiscount"
+              onClick={() => setIsOverrideDiscountModalVisible(true)}
+            >Override Discount</Button>
           </div>
           <div class={tw`flex gap-2 w-full justify-left pt-1`}>
             <input
@@ -323,21 +331,6 @@ export default function RunFlowsPage(props: Props) {
                 class="inline-block pl-[0.15rem] hover:cursor-pointer"
                 for="skipRewardNotifcationCheckbox">
                     Skip Reward Notfication Screen
-            </label>
-          </div>
-          <div class={tw`flex gap-2 w-full justify-left pt-1`}>
-            <input
-                name="attemptOverrideDiscountCheckbox"
-                type="checkbox"
-                defaultChecked={attemptOverrideDiscount}
-                checked={attemptOverrideDiscount}
-                id="attemptOverrideDiscountCheckbox"
-                onChange={(e) => { onChangeCheckboxHandler('attemptOverrideDiscount', e) }}
-            />
-            <label
-                class="inline-block pl-[0.15rem] hover:cursor-pointer"
-                for="attemptOverrideDiscountCheckbox">
-                    Override Discount (if possible)
             </label>
           </div>
         </div>
@@ -386,11 +379,11 @@ export default function RunFlowsPage(props: Props) {
           )}
         </div>
       )}
-      {isModalVisible && (
+      {isDiscountModalVisible && (
         <Modal>
           <div>The customer has selected a discount</div>
           <div>Name: {selectedDiscount?.name}</div>
-          <div>Point Cost: {selectedDiscount?.point_cost}</div>
+          <div>Point Cost: {selectedDiscount?.pointCost}</div>
           <div>ID: {selectedDiscount?.uid}</div>
           <div>Type: {selectedDiscount?.type}</div>
 
@@ -400,6 +393,56 @@ export default function RunFlowsPage(props: Props) {
             </Button>
             <Button onClick={() => setApprovedDiscount(null)}>
               Reject
+            </Button>
+          </div>
+        </Modal>
+      )}
+      {isOverrideDiscountModalVisible && (
+        <Modal>
+          <table class="justify-center text-center w-75 mw-100">
+            <thead>
+              <tr>
+                <th class="px-3">Name</th>
+                <th class="px-3">Type</th>
+                <th class="px-3">Point Cost</th>
+                <th class="px-3">Selected</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customerInformation?.customer.discounts.map(discount =>
+                <tr>
+                  <td>
+                    {discount.name}
+                  </td>
+                  <td>
+                    {discount.type}
+                  </td>
+                  <td>
+                    {discount.pointCost}
+                  </td>
+                  <td>
+                    <input 
+                      value={discount.uid} 
+                      id={discount.uid} 
+                      name="overrideDiscount" 
+                      type="radio" 
+                      checked={overridenDiscount?.uid == discount.uid || (!attemptOverrideDiscount && !overridenDiscount && discount.selected)}
+                      onChange={(e) => { onChangeRadioButtonHandler(discount) }}/>
+                  </td> 
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div class={tw`mt-5 flex justify-center gap-10`}>
+            <Button onClick={onOverrideDiscount}>
+              Accept
+            </Button>
+            <Button onClick={() => setIsOverrideDiscountModalVisible(false)}>
+              Cancel
+            </Button>
+            <Button onClick={onRemoveDiscount}>
+              Remove
             </Button>
           </div>
         </Modal>
