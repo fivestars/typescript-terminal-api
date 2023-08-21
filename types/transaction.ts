@@ -91,7 +91,7 @@ export interface Customer {
 export interface Discount {
   partner_metadata: any;
   name: string;
-  point_cost: number;
+  pointCost: number;
   selected: boolean;
   type: string;
   uid: string;
