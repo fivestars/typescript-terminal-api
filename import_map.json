@@ -1,13 +1,13 @@
 {
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.2.0/",
-    "preact": "https://esm.sh/preact@10.16.0",
-    "preact/": "https://esm.sh/preact@10.16.0/",
+    "preact": "https://esm.sh/preact@10.17.1",
+    "preact/": "https://esm.sh/preact@10.17.1/",
     "preact-render-to-string": "https://esm.sh/preact-render-to-string@6.2.0?external=preact",
     "@twind": "./utils/twind.ts",
     "twind": "https://esm.sh/twind@0.16.17",
     "styled-components": "https://esm.sh/styled-components@5.3.5",
     "twind/": "https://esm.sh/twind@0.16.17/",
-    "react-json-view-lite": "https://esm.sh/react-json-view-lite@0.9.7?alias=react:preact/compat"
+    "react-json-view-lite": "https://esm.sh/react-json-view-lite@1.0.0?alias=react:preact/compat"
   }
 }
