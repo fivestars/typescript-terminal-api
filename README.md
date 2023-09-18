@@ -6,7 +6,12 @@ TypeScript based flows for driving the Terminal API
 
 Deno: [https://deno.land/](https://deno.land/)
 
-For Visual Studio Code install the Deno extension: [https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno)
+For Visual Studio Code install the Deno extension: [https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno).
+
+Last Deno working version:
+-deno 1.36.4 (release, aarch64-apple-darwin)
+-v8 11.6.189.12
+-typescript 5.1.6
 
 ## Configuring credentials
 
